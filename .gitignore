@@ -5,6 +5,7 @@ bin/
 *.dll
 *.so
 *.dylib
+staticsend
 
 # Go test binaries
 *.test
@@ -14,8 +15,6 @@ bin/
 *.out
 coverage.html
 coverage.txt
-
-staticsend
 
 # Dependency directories - vendor/ contains downloaded dependencies
 vendor/

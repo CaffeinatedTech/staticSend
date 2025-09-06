@@ -69,13 +69,20 @@ func (tm *TemplateManager) loadTemplates() {
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".html" && path != basePath {
-			// Create a new template by cloning the base and adding the specific template
-			tmpl := template.Must(baseTmpl.Clone())
-			tmpl = template.Must(tmpl.ParseFiles(path))
-			
 			// Use relative path from templates directory as key
 			relPath, _ := filepath.Rel(templatesDir, path)
-			tm.templates[relPath] = tmpl
+			
+			// Check if this is a partial (in partials directory)
+			if filepath.Dir(relPath) == "partials" {
+				// For partials, parse without base template
+				tmpl := template.Must(template.ParseFiles(path))
+				tm.templates[relPath] = tmpl
+			} else {
+				// For full pages, use base template wrapper
+				tmpl := template.Must(baseTmpl.Clone())
+				tmpl = template.Must(tmpl.ParseFiles(path))
+				tm.templates[relPath] = tmpl
+			}
 		}
 		return nil
 	})

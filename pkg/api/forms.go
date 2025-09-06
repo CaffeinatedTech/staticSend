@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"staticsend/pkg/middleware"
 	"staticsend/pkg/models"
+	"staticsend/pkg/utils"
 )
 
 // FormHandler handles form-related API requests
@@ -37,12 +38,19 @@ func (h *FormHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := r.FormValue("name")
-	title := r.FormValue("title")
-	description := r.FormValue("description")
-	redirectURL := r.FormValue("redirect_url")
+	domain := r.FormValue("domain")
+	turnstileSecret := r.FormValue("turnstile_secret")
+	forwardEmail := r.FormValue("forward_email")
 
-	if name == "" || title == "" {
-		http.Error(w, "Name and title are required", http.StatusBadRequest)
+	if name == "" || domain == "" || turnstileSecret == "" || forwardEmail == "" {
+		http.Error(w, "Name, domain, secret key, and forward email are required", http.StatusBadRequest)
+		return
+	}
+
+	// Auto-generate unique form key
+	formKey, err := utils.GenerateFormKey()
+	if err != nil {
+		http.Error(w, "Failed to generate form key", http.StatusInternalServerError)
 		return
 	}
 
@@ -57,15 +65,15 @@ func (h *FormHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form, err := models.CreateForm(h.DB, user.ID, name, title, description, redirectURL)
+	_, err = models.CreateForm(h.DB, user.ID, name, domain, turnstileSecret, forwardEmail, formKey)
 	if err != nil {
 		http.Error(w, "Failed to create form", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	// Use HX-Redirect for HTMX to properly handle the redirect
+	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(form)
 }
 
 // GetForm handles retrieving a single form

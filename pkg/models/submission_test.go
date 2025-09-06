@@ -15,7 +15,7 @@ func TestCreateSubmission(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestGetSubmissionByID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -121,12 +121,12 @@ func TestGetSubmissionsByFormID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form1, err := CreateForm(db, user.ID, "contact", "Contact Form", "Form 1", "")
+	form1, err := CreateForm(db, user.ID, "contact", "example1.com", "turnstile_secret_456", "admin@example.com", "form_key_001")
 	if err != nil {
 		t.Fatalf("Failed to create form1: %v", err)
 	}
 
-	form2, err := CreateForm(db, user.ID, "feedback", "Feedback Form", "Form 2", "")
+	form2, err := CreateForm(db, user.ID, "feedback", "example1.com", "turnstile_secret_abc", "admin@example.com", "form_key_002")
 	if err != nil {
 		t.Fatalf("Failed to create form2: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestUpdateSubmissionStatus(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -255,7 +255,7 @@ func TestGetSubmissionCountByFormID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}

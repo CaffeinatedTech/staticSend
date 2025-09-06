@@ -33,6 +33,26 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("Failed to execute migration: %v", err)
 	}
 
+	// Run app settings migration
+	migrationSQL, err = os.ReadFile("../../migrations/002_app_settings.up.sql")
+	if err != nil {
+		t.Fatalf("Failed to read migration file: %v", err)
+	}
+
+	if _, err := db.Exec(string(migrationSQL)); err != nil {
+		t.Fatalf("Failed to execute migration: %v", err)
+	}
+
+	// Run form schema update migration
+	migrationSQL, err = os.ReadFile("../../migrations/003_update_form_schema.up.sql")
+	if err != nil {
+		t.Fatalf("Failed to read migration file: %v", err)
+	}
+
+	if _, err := db.Exec(string(migrationSQL)); err != nil {
+		t.Fatalf("Failed to execute migration: %v", err)
+	}
+
 	return db
 }
 

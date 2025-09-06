@@ -97,6 +97,26 @@ func runMigrations() error {
 		return fmt.Errorf("failed to check for app_settings table: %w", err)
 	}
 
+	// Check if forms table has the new domain column to determine if we need to run the third migration
+	var domainColumn string
+	err = DB.QueryRow("SELECT name FROM pragma_table_info('forms') WHERE name = 'domain'").Scan(&domainColumn)
+	if err == sql.ErrNoRows {
+		// forms table doesn't have domain column, run third migration
+		log.Println("Running form schema update migration...")
+		migrationSQL, err := os.ReadFile("migrations/003_update_form_schema.up.sql")
+		if err != nil {
+			return fmt.Errorf("failed to read migration file: %w", err)
+		}
+
+		if _, err := DB.Exec(string(migrationSQL)); err != nil {
+			return fmt.Errorf("failed to execute migration: %w", err)
+		}
+
+		log.Println("Form schema update migration completed successfully")
+	} else if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check for forms table columns: %w", err)
+	}
+
 	return nil
 }
 

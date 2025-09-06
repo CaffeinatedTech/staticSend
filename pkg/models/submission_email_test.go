@@ -15,7 +15,7 @@ func TestCreateSubmissionEmail(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestGetSubmissionEmailByID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestGetSubmissionEmailBySubmissionID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -174,7 +174,7 @@ func TestUpdateSubmissionEmailStatus(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form, err := CreateForm(db, user.ID, "contact", "Contact Form", "Test form", "")
+	form := CreateTestForm(t, db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}

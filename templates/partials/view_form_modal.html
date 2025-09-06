@@ -1,6 +1,6 @@
-<div class="text-center">
+<div class="text-center" _="on load remove .hidden from #modal">
     {{$form := .Data}}
-    <h3 class="text-lg font-medium text-gray-900 mb-4">{{$form.Title}}</h3>
+    <h3 class="text-lg font-medium text-gray-900 mb-4">{{$form.Name}}</h3>
     
     <div class="space-y-4 text-left">
         <div>
@@ -9,23 +9,24 @@
         </div>
         
         <div>
-            <label class="block text-sm font-medium text-gray-700">Form Title</label>
-            <p class="mt-1 text-sm text-gray-900">{{$form.Title}}</p>
+            <label class="block text-sm font-medium text-gray-700">Domain</label>
+            <p class="mt-1 text-sm text-gray-900">{{$form.Domain}}</p>
         </div>
         
-        {{if $form.Description}}
         <div>
-            <label class="block text-sm font-medium text-gray-700">Description</label>
-            <p class="mt-1 text-sm text-gray-900">{{$form.Description}}</p>
+            <label class="block text-sm font-medium text-gray-700">Turnstile Secret Key</label>
+            <p class="mt-1 text-sm text-gray-900 break-all">{{$form.TurnstileSecret}}</p>
         </div>
-        {{end}}
         
-        {{if $form.RedirectURL}}
         <div>
-            <label class="block text-sm font-medium text-gray-700">Redirect URL</label>
-            <p class="mt-1 text-sm text-gray-900 break-all">{{$form.RedirectURL}}</p>
+            <label class="block text-sm font-medium text-gray-700">Forward Email</label>
+            <p class="mt-1 text-sm text-gray-900">{{$form.ForwardEmail}}</p>
         </div>
-        {{end}}
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Form Key</label>
+            <p class="mt-1 text-sm text-gray-900 break-all">{{$form.FormKey}}</p>
+        </div>
         
         <div>
             <label class="block text-sm font-medium text-gray-700">Submissions</label>
@@ -33,22 +34,26 @@
         </div>
         
         <div>
-            <label class="block text-sm font-medium text-gray-700">Form URL</label>
+            <label class="block text-sm font-medium text-gray-700">Submission Endpoint</label>
             <p class="mt-1 text-sm text-gray-900 break-all">
-                /forms/{{$form.Name}}
+                /api/v1/submit/{{$form.FormKey}}
             </p>
         </div>
         
         <div>
-            <label class="block text-sm font-medium text-gray-700">Embed Code</label>
+            <label class="block text-sm font-medium text-gray-700">Integration Code</label>
             <div class="mt-1">
                 <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
-&lt;form action="/forms/{{$form.Name}}" method="POST"&gt;
+&lt;form action="/api/v1/submit/{{$form.FormKey}}" method="POST"&gt;
     &lt;input type="text" name="name" placeholder="Your Name" required&gt;
     &lt;input type="email" name="email" placeholder="Your Email" required&gt;
     &lt;textarea name="message" placeholder="Your Message" required&gt;&lt;/textarea&gt;
+    
+    &lt;!-- Cloudflare Turnstile widget would go here if you have a site key --&gt;
+    
     &lt;button type="submit"&gt;Send Message&lt;/button&gt;
-&lt;/form&gt;</pre>
+&lt;/form&gt;
+&lt;script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer&gt;&lt;/script&gt;</pre>
             </div>
         </div>
     </div>

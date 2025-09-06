@@ -2,6 +2,7 @@ package web
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -104,9 +105,12 @@ func (h *WebHandler) CreateFormModal(w http.ResponseWriter, r *http.Request) {
 		Title: "Create New Form",
 	}
 	
-	// This would render a partial for the modal content
-	w.Header().Set("HX-Trigger", "modalOpen")
+	// Render the partial for the modal content
+	// HTMX will handle replacing the content in #modal-content
+	// The button click already adds .overflow-hidden to body and shows the modal
 	if err := h.TemplateManager.Render(w, "partials/form_modal.html", data); err != nil {
+		// Log the specific error for debugging
+		log.Printf("Failed to render form modal template: %v", err)
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 }
@@ -150,11 +154,10 @@ func (h *WebHandler) ViewFormModal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := templates.TemplateData{
-		Title: "View Form - " + form.Title,
+		Title: "View Form - " + form.Name,
 		Data:  form,
 	}
 	
-	w.Header().Set("HX-Trigger", "modalOpen")
 	if err := h.TemplateManager.Render(w, "partials/view_form_modal.html", data); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}

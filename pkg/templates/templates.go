@@ -1,11 +1,13 @@
 package templates
 
 import (
+	"encoding/json"
 	"html/template"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"staticsend/pkg/models"
@@ -33,15 +35,33 @@ type DashboardStats struct {
 type TemplateManager struct {
 	templates map[string]*template.Template
 	mu        sync.RWMutex
+	baseURL   string
 }
 
 // NewTemplateManager creates a new template manager
 func NewTemplateManager() *TemplateManager {
 	tm := &TemplateManager{
 		templates: make(map[string]*template.Template),
+		baseURL:   getBaseURL(),
 	}
 	tm.loadTemplates()
 	return tm
+}
+
+// templateFuncMap returns the template function map
+func (tm *TemplateManager) templateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"unmarshalJSON": func(s string) (map[string]interface{}, error) {
+			var data map[string]interface{}
+			if err := json.Unmarshal([]byte(s), &data); err != nil {
+				return nil, err
+			}
+			return data, nil
+		},
+		"baseURL": func() string {
+			return tm.baseURL
+		},
+	}
 }
 
 // loadTemplates loads all templates from the templates directory
@@ -56,9 +76,9 @@ func (tm *TemplateManager) loadTemplates() {
 		return
 	}
 
-	// Parse base template first
+	// Parse base template first with functions
 	basePath := filepath.Join(cwd, "templates", "base.html")
-	baseTmpl := template.Must(template.ParseFiles(basePath))
+	baseTmpl := template.Must(template.New("base.html").Funcs(tm.templateFuncMap()).ParseFiles(basePath))
 
 	// Walk through all template files
 	templatesDir := filepath.Join(cwd, "templates")
@@ -74,13 +94,13 @@ func (tm *TemplateManager) loadTemplates() {
 			
 			// Check if this is a partial (in partials directory)
 			if filepath.Dir(relPath) == "partials" {
-				// For partials, parse without base template
-				tmpl := template.Must(template.ParseFiles(path))
+				// For partials, parse without base template but with functions
+				tmpl := template.Must(template.New(filepath.Base(path)).Funcs(tm.templateFuncMap()).ParseFiles(path))
 				tm.templates[relPath] = tmpl
 			} else {
-				// For full pages, use base template wrapper
+				// For full pages, use base template wrapper with functions
 				tmpl := template.Must(baseTmpl.Clone())
-				tmpl = template.Must(tmpl.ParseFiles(path))
+				tmpl = template.Must(tmpl.Funcs(tm.templateFuncMap()).ParseFiles(path))
 				tm.templates[relPath] = tmpl
 			}
 		}
@@ -123,4 +143,15 @@ func DefaultTemplateData() TemplateData {
 			SubmissionCount: 0,
 		},
 	}
+}
+
+// getBaseURL determines the base URL for the application
+func getBaseURL() string {
+	// Try to get from environment variable
+	if envURL := os.Getenv("STATICSEND_BASE_URL"); envURL != "" {
+		return strings.TrimSuffix(envURL, "/")
+	}
+	
+	// For development, use localhost with default port
+	return "http://localhost:8080"
 }

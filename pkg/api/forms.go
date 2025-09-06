@@ -155,7 +155,69 @@ func (h *FormHandler) DeleteForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	// Tell HTMX to refresh the page content
+	w.Header().Set("HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
+}
+
+// UpdateForm handles form updates
+func (h *FormHandler) UpdateForm(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	formIDStr := chi.URLParam(r, "id")
+	formID, err := strconv.ParseInt(formIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid form ID", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch form from database to verify ownership
+	form, err := models.GetFormByID(h.DB, formID)
+	if err != nil {
+		http.Error(w, "Failed to fetch form", http.StatusInternalServerError)
+		return
+	}
+	if form == nil {
+		http.Error(w, "Form not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify user owns this form
+	if form.UserID != user.ID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	name := r.FormValue("name")
+	domain := r.FormValue("domain")
+	turnstileSecret := r.FormValue("turnstile_secret")
+	forwardEmail := r.FormValue("forward_email")
+
+	if name == "" || domain == "" || turnstileSecret == "" || forwardEmail == "" {
+		http.Error(w, "Name, domain, secret key, and forward email are required", http.StatusBadRequest)
+		return
+	}
+
+	// Update form
+	err = models.UpdateForm(h.DB, formID, name, domain, turnstileSecret, forwardEmail)
+	if err != nil {
+		http.Error(w, "Failed to update form", http.StatusInternalServerError)
+		return
+	}
+
+	// Use HX-Redirect for HTMX to properly handle the redirect
+	w.Header().Set("HX-Redirect", "/dashboard")
+	w.WriteHeader(http.StatusOK)
 }
 
 // GetUserForms handles retrieving all forms for a user

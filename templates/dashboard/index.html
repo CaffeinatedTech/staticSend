@@ -45,10 +45,14 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">{{.FormKey}}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{.SubmissionCount}}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button hx-get="/forms/{{.ID}}" hx-target="#modal-content" 
+                            <button hx-get="/forms/{{.ID}}/view" hx-target="#modal-content" 
                                     class="text-blue-600 hover:text-blue-900 mr-3">
-                                View
+                                Details
                             </button>
+                            <a href="/forms/{{.ID}}/submissions" 
+                               class="text-green-600 hover:text-green-900 mr-3">
+                                Submissions
+                            </a>
                             <button hx-delete="/forms/{{.ID}}" hx-confirm="Are you sure?" 
                                     hx-on::after-request="if(event.detail.successful) { htmx.ajax('GET', '/dashboard', { target: '#content', swap: 'innerHTML' }) }"
                                     class="text-red-600 hover:text-red-900">

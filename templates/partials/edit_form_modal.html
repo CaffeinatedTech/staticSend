@@ -1,0 +1,51 @@
+<div class="text-center" _="on load remove .hidden from #modal">
+    {{$form := .Data}}
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Form: {{$form.Name}}</h3>
+    
+    <form hx-put="/forms/{{$form.ID}}" hx-target="#modal-content" hx-on::after-request="if(event.detail.successful) { htmx.ajax('GET', '/dashboard', { target: '#content', swap: 'innerHTML' }) }">
+        <div class="space-y-4 text-left">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Form Name</label>
+                <input type="text" id="name" name="name" value="{{$form.Name}}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            
+            <div>
+                <label for="domain" class="block text-sm font-medium text-gray-700">Domain</label>
+                <input type="text" id="domain" name="domain" value="{{$form.Domain}}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                       placeholder="example.com">
+            </div>
+            
+            <div>
+                <label for="turnstile_secret" class="block text-sm font-medium text-gray-700">Turnstile Secret Key</label>
+                <input type="text" id="turnstile_secret" name="turnstile_secret" value="{{$form.TurnstileSecret}}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            
+            <div>
+                <label for="forward_email" class="block text-sm font-medium text-gray-700">Forward Email</label>
+                <input type="email" id="forward_email" name="forward_email" value="{{$form.ForwardEmail}}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                       placeholder="your-email@example.com">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Form Key</label>
+                <p class="mt-1 text-sm text-gray-900 break-all">{{$form.FormKey}}</p>
+                <p class="text-xs text-gray-500">This key cannot be changed</p>
+            </div>
+        </div>
+        
+        <div class="mt-6 flex justify-end space-x-3">
+            <button type="button" onclick="htmx.trigger('#modal', 'closeModal')" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                Cancel
+            </button>
+            <button type="submit" 
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                Update Form
+            </button>
+        </div>
+    </form>
+</div>

@@ -63,9 +63,13 @@
                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
             Close
         </button>
-        <button hx-get="/forms/{{$form.ID}}/submissions" hx-target="#modal-content"
-                class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
-            View Submissions ({{$form.SubmissionCount}})
+        <button hx-get="/forms/{{$form.ID}}/edit" hx-target="#modal-content"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+            Edit
         </button>
+        <a href="/forms/{{$form.ID}}/submissions" 
+           class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+            View Submissions ({{$form.SubmissionCount}})
+        </a>
     </div>
 </div>

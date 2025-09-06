@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <style>
+      .paper-plane { fill: #3b82f6; }
+      .paper-plane-outline { fill: #1d4ed8; }
+    </style>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="#3b82f6" />
+  <path class="paper-plane" d="M30 60 L70 40 L50 70 Z" />
+  <path class="paper-plane-outline" d="M30 60 L50 70 L70 40 Z" stroke="#1d4ed8" stroke-width="2" fill="none" />
+</svg>

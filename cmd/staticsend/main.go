@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,7 @@ import (
 	"staticsend/pkg/api"
 	"staticsend/pkg/auth"
 	"staticsend/pkg/database"
+	"staticsend/pkg/email"
 	"staticsend/pkg/templates"
 	"staticsend/pkg/web"
 	customMiddleware "staticsend/pkg/middleware"
@@ -43,17 +45,35 @@ func main() {
 	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm)
 	settingsHandler := web.NewSettingsHandler(&database.Database{Connection: database.DB}, tm)
 	
+	// Create email service
+	emailService := createEmailService()
+	
 	// Create API handlers
 	formHandler := api.NewFormHandler(database.DB)
+	submissionHandler := api.NewSubmissionHandler(database.DB, emailService)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	
+	// Serve static files
+	staticDir := "./static"
+	if _, err := os.Stat(staticDir); err == nil {
+		r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+	}
+	
+	// Serve favicon
+	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./static/favicon.svg")
+	})
 
 	// Public routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+	
+	// Form submission endpoint (public)
+	r.Post("/api/v1/submit/{formKey}", submissionHandler.SubmitForm)
 
 	// Web pages
 	r.Get("/login", webHandler.LoginPage)
@@ -77,11 +97,14 @@ func main() {
 		r.Get("/settings", settingsHandler.SettingsPage)
 		r.Post("/settings/update", settingsHandler.UpdateSettings)
 		r.Get("/forms/new", webHandler.CreateFormModal)
-		r.Get("/forms/{id}", webHandler.ViewFormModal)
+		r.Get("/forms/{id}/view", webHandler.ViewFormModal)
+		r.Get("/forms/{id}/edit", webHandler.EditFormModal)
+		r.Get("/forms/{id}/submissions", webHandler.FormSubmissions)
 		
 		// Form API routes
 		r.Post("/forms", formHandler.CreateForm)
 		r.Get("/forms/{id}", formHandler.GetForm)
+		r.Put("/forms/{id}", formHandler.UpdateForm)
 		r.Delete("/forms/{id}", formHandler.DeleteForm)
 		r.Get("/api/forms", formHandler.GetUserForms)
 	})
@@ -120,4 +143,52 @@ func getSecretKey() []byte {
 	
 	log.Println("WARNING: Using auto-generated JWT secret key. For production, set STATICSEND_JWT_SECRET environment variable.")
 	return key
+}
+
+// createEmailService creates and configures the email service
+func createEmailService() *email.EmailService {
+	// Get SMTP configuration from environment variables
+	host := getEnv("STATICSEND_SMTP_HOST", "")
+	portStr := getEnv("STATICSEND_SMTP_PORT", "587")
+	username := getEnv("STATICSEND_SMTP_USER", "")
+	password := getEnv("STATICSEND_SMTP_PASS", "")
+	from := getEnv("STATICSEND_SMTP_FROM", username)
+	
+	// Convert port to integer
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		port = 587 // default port
+	}
+	
+	// If no SMTP configuration is provided, create a dummy service that logs emails
+	if host == "" || username == "" || password == "" {
+		log.Println("WARNING: No SMTP configuration found. Emails will be logged to console instead of being sent.")
+		// Create a minimal config for development
+		config := email.EmailConfig{
+			Host:     "localhost",
+			Port:     587,
+			Username: "noreply@example.com",
+			Password: "",
+			From:     "noreply@example.com",
+			UseTLS:   false,
+		}
+		return email.NewEmailService(config, 100, 5, 3)
+	}
+	
+	config := email.EmailConfig{
+		Host:     host,
+		Port:     port,
+		Username: username,
+		Password: password,
+		From:     from,
+		UseTLS:   true, // Assume TLS for production
+	}
+	
+	// Test the connection
+	if err := email.NewEmailService(config, 100, 5, 3).TestConnection(); err != nil {
+		log.Printf("WARNING: SMTP connection test failed: %v", err)
+		log.Println("Emails may not be sent successfully. Check your SMTP configuration.")
+	}
+	
+	return email.NewEmailService(config, 100, 5, 3)
 }

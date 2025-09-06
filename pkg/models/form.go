@@ -88,3 +88,30 @@ func FormExists(db *sql.DB, userID int64, name string) (bool, error) {
 
 	return exists, err
 }
+
+// GetFormByKey retrieves a form by its form_key
+func GetFormByKey(db *sql.DB, formKey string) (*Form, error) {
+	var form Form
+	err := db.QueryRow(
+		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, form_key, created_at, updated_at FROM forms WHERE form_key = ?",
+		formKey,
+	).Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.FormKey, &form.CreatedAt, &form.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &form, nil
+}
+
+// UpdateForm updates a form in the database
+func UpdateForm(db *sql.DB, formID int64, name, domain, turnstileSecret, forwardEmail string) error {
+	_, err := db.Exec(
+		"UPDATE forms SET name = ?, domain = ?, turnstile_secret = ?, forward_email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		name, domain, turnstileSecret, forwardEmail, formID,
+	)
+	return err
+}

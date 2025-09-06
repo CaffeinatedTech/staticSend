@@ -162,3 +162,103 @@ func (h *WebHandler) ViewFormModal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 }
+
+// EditFormModal renders the edit form modal
+func (h *WebHandler) EditFormModal(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	formIDStr := chi.URLParam(r, "id")
+	formID, err := strconv.ParseInt(formIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid form ID", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch form from database
+	form, err := models.GetFormByID(h.DB, formID)
+	if err != nil {
+		http.Error(w, "Failed to fetch form", http.StatusInternalServerError)
+		return
+	}
+	if form == nil {
+		http.Error(w, "Form not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify user owns this form
+	if form.UserID != user.ID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	data := templates.TemplateData{
+		Title: "Edit Form - " + form.Name,
+		Data:  form,
+	}
+	
+	if err := h.TemplateManager.Render(w, "partials/edit_form_modal.html", data); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	}
+}
+
+// FormSubmissions renders the form submissions page
+func (h *WebHandler) FormSubmissions(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	formIDStr := chi.URLParam(r, "id")
+	formID, err := strconv.ParseInt(formIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid form ID", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch form from database
+	form, err := models.GetFormByID(h.DB, formID)
+	if err != nil {
+		http.Error(w, "Failed to fetch form", http.StatusInternalServerError)
+		return
+	}
+	if form == nil {
+		http.Error(w, "Form not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify user owns this form
+	if form.UserID != user.ID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get submissions for this form
+	submissions, err := models.GetSubmissionsByFormID(h.DB, form.ID)
+	if err != nil {
+		http.Error(w, "Failed to fetch submissions", http.StatusInternalServerError)
+		return
+	}
+
+	// Get submission count
+	count, err := models.GetSubmissionCountByFormID(h.DB, form.ID)
+	if err == nil {
+		form.SubmissionCount = count
+	}
+
+	data := templates.DefaultTemplateData()
+	data.Title = "Submissions - " + form.Name + " - staticSend"
+	data.User = user
+	data.Data = map[string]interface{}{
+		"Form":        form,
+		"Submissions": submissions,
+	}
+
+	if err := h.TemplateManager.Render(w, "submissions/index.html", data); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	}
+}

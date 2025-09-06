@@ -32,17 +32,16 @@
     - [x] Registration route protection
 - [x] Implement authentication UI (login/register)
 
-## Stage 4: API Implementation
+## Stage 4: Submission API & Testing
 - [ ] Create form submission endpoint
 - [ ] Implement Turnstile validation endpoint
 - [ ] Add rate limiting to submission API
-- [ ] Create management API endpoints
-- [ ] Implement JWT authentication for API
+- [ ] Add comprehensive test coverage for all packages
+- [ ] Implement integration tests for submission flow
 
 ## Stage 5: Deployment & Polish
 - [ ] Create Docker configuration
 - [ ] Set up environment configuration system
 - [ ] Write comprehensive documentation
-- [ ] Add testing suite
 - [ ] Prepare for production deployment
 - [ ] Create example integration code

@@ -43,13 +43,21 @@
 - Use chi router for HTTP routing
 - JSON responses should use consistent structure
 - Validate all incoming requests
-- Use middleware for common functionality (auth, logging)
+- Use middleware for common functionality (auth, logging, rate limiting)
+- **API Design**: Only submission endpoints needed (no management API)
 
 ### Testing
-- Table-driven tests for complex logic
-- Use testify/assert for assertions
-- Mock external dependencies
-- Test both success and error cases
+- **Test-Driven Development**: Write tests before or alongside feature implementation
+- **Package Coverage**: Every package should have corresponding *_test.go files
+- **Table-driven tests** for complex logic with multiple scenarios
+- **Integration Tests**: Test complete workflows from HTTP request to database/email
+- **Mock external dependencies** (Turnstile, SMTP, database) for reliable testing
+- **Test both success and error cases** comprehensively
+- **Concurrency testing** for email worker pool and concurrent submissions
+- **Benchmark tests** for performance-critical components
+- **Test coverage goal**: 80%+ for all packages
+- **Run tests frequently**: `go test ./...` after every significant change
+- **Test data**: Use test fixtures and setup/teardown functions for consistent test environment
 
 ### Database
 - Use sqlc for type-safe SQL queries

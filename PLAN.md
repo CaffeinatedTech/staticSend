@@ -1,8 +1,7 @@
 # PLAN.md - staticSend Development Plan
 
-**Current Task:** Implement form management interface
-**Last Task:** Add user settings and configuration
-**Last Task:** Build HTMX-based management UI
+**Current Task:** Create submission history view
+**Last Task:** Implement form management interface
 
 ## Stage 1: Core Foundation
 - [x] Initialize Go module structure
@@ -24,7 +23,7 @@
 ## Stage 3: Web Interface
 - [x] Create authentication system
 - [x] Build HTMX-based management UI
-- [ ] Implement form management interface
+- [x] Implement form management interface
 - [ ] Create submission history view
 - [x] Add user settings and configuration
     - [x] Registration disable/enable setting

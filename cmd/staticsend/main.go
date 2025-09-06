@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"staticsend/pkg/api"
 	"staticsend/pkg/auth"
 	"staticsend/pkg/database"
 	"staticsend/pkg/templates"
@@ -38,9 +39,12 @@ func main() {
 
 	// Create template manager and web handlers
 	tm := templates.NewTemplateManager()
-	webHandler := web.NewWebHandler(tm)
+	webHandler := web.NewWebHandler(database.DB, tm)
 	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm)
 	settingsHandler := web.NewSettingsHandler(&database.Database{Connection: database.DB}, tm)
+	
+	// Create API handlers
+	formHandler := api.NewFormHandler(database.DB)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -74,6 +78,12 @@ func main() {
 		r.Post("/settings/update", settingsHandler.UpdateSettings)
 		r.Get("/forms/new", webHandler.CreateFormModal)
 		r.Get("/forms/{id}", webHandler.ViewFormModal)
+		
+		// Form API routes
+		r.Post("/forms", formHandler.CreateForm)
+		r.Get("/forms/{id}", formHandler.GetForm)
+		r.Delete("/forms/{id}", formHandler.DeleteForm)
+		r.Get("/api/forms", formHandler.GetUserForms)
 	})
 
 	// Test endpoint for rate limiting

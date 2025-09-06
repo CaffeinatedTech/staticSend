@@ -7,14 +7,15 @@ import (
 
 // Form represents a contact form configuration
 type Form struct {
-	ID          int64     `json:"id"`
-	UserID      int64     `json:"user_id"`
-	Name        string    `json:"name"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	RedirectURL string    `json:"redirect_url"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID             int64     `json:"id"`
+	UserID         int64     `json:"user_id"`
+	Name           string    `json:"name"`
+	Title          string    `json:"title"`
+	Description    string    `json:"description"`
+	RedirectURL    string    `json:"redirect_url"`
+	SubmissionCount int       `json:"submission_count"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // CreateForm creates a new form in the database

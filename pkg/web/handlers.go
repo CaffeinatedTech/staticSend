@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -12,12 +13,14 @@ import (
 
 // WebHandler handles web page requests
 type WebHandler struct {
+	DB              *sql.DB
 	TemplateManager *templates.TemplateManager
 }
 
 // NewWebHandler creates a new web handler
-func NewWebHandler(tm *templates.TemplateManager) *WebHandler {
+func NewWebHandler(db *sql.DB, tm *templates.TemplateManager) *WebHandler {
 	return &WebHandler{
+		DB:              db,
 		TemplateManager: tm,
 	}
 }
@@ -56,13 +59,39 @@ func (h *WebHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Fetch user's forms and stats from database
+	// Fetch user's forms from database
+	forms, err := models.GetFormsByUserID(h.DB, user.ID)
+	if err != nil {
+		http.Error(w, "Failed to fetch forms", http.StatusInternalServerError)
+		return
+	}
+
+	// Convert to pointer slice for template
+	formPtrs := make([]*models.Form, len(forms))
+	for i := range forms {
+		formPtrs[i] = &forms[i]
+	}
+
+	// Get submission count for each form
+	for _, form := range formPtrs {
+		count, err := models.GetSubmissionCountByFormID(h.DB, form.ID)
+		if err == nil {
+			form.SubmissionCount = count
+		}
+	}
+
+	// Get total submission count
+	totalSubmissions := 0
+	for _, form := range formPtrs {
+		totalSubmissions += form.SubmissionCount
+	}
+
 	data := templates.DefaultTemplateData()
 	data.Title = "Dashboard - staticSend"
 	data.User = user
-	data.Forms = []*models.Form{} // Empty for now
-	data.Stats.FormCount = 0
-	data.Stats.SubmissionCount = 0
+	data.Forms = formPtrs
+	data.Stats.FormCount = len(formPtrs)
+	data.Stats.SubmissionCount = totalSubmissions
 
 	if err := h.TemplateManager.Render(w, "dashboard/index.html", data); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
@@ -84,16 +113,45 @@ func (h *WebHandler) CreateFormModal(w http.ResponseWriter, r *http.Request) {
 
 // ViewFormModal renders the view form modal
 func (h *WebHandler) ViewFormModal(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	formIDStr := chi.URLParam(r, "id")
-	_, err := strconv.ParseInt(formIDStr, 10, 64)
+	formID, err := strconv.ParseInt(formIDStr, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid form ID", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: Fetch form from database using formID
+	// Fetch form from database
+	form, err := models.GetFormByID(h.DB, formID)
+	if err != nil {
+		http.Error(w, "Failed to fetch form", http.StatusInternalServerError)
+		return
+	}
+	if form == nil {
+		http.Error(w, "Form not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify user owns this form
+	if form.UserID != user.ID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get submission count
+	count, err := models.GetSubmissionCountByFormID(h.DB, form.ID)
+	if err == nil {
+		form.SubmissionCount = count
+	}
+
 	data := templates.TemplateData{
-		Title: "View Form",
+		Title: "View Form - " + form.Title,
+		Data:  form,
 	}
 	
 	w.Header().Set("HX-Trigger", "modalOpen")

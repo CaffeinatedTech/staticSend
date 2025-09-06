@@ -40,6 +40,7 @@ func main() {
 	tm := templates.NewTemplateManager()
 	webHandler := web.NewWebHandler(tm)
 	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm)
+	settingsHandler := web.NewSettingsHandler(&database.Database{Connection: database.DB}, tm)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -69,6 +70,8 @@ func main() {
 
 		r.Get("/", webHandler.Dashboard) // Root route now protected
 		r.Get("/dashboard", webHandler.Dashboard)
+		r.Get("/settings", settingsHandler.SettingsPage)
+		r.Post("/settings/update", settingsHandler.UpdateSettings)
 		r.Get("/forms/new", webHandler.CreateFormModal)
 		r.Get("/forms/{id}", webHandler.ViewFormModal)
 	})

@@ -32,6 +32,17 @@ func (h *WebAuthHandler) RegisterForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if registration is enabled
+	enabled, err := models.IsRegistrationEnabled(h.DB.Connection)
+	if err != nil {
+		h.renderRegisterPage(w, "Internal server error")
+		return
+	}
+	if !enabled {
+		h.renderRegisterPage(w, "Registration is currently disabled")
+		return
+	}
+
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 

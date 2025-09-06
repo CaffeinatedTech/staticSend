@@ -20,6 +20,7 @@ type TemplateData struct {
 	ShowHeader bool
 	Forms      []*models.Form
 	Stats      *DashboardStats
+	Data       interface{} // Generic data field for additional data
 }
 
 // DashboardStats holds statistics for the dashboard

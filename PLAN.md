@@ -1,6 +1,7 @@
 # PLAN.md - staticSend Development Plan
 
 **Current Task:** Implement form management interface
+**Last Task:** Add user settings and configuration
 **Last Task:** Build HTMX-based management UI
 
 ## Stage 1: Core Foundation
@@ -25,10 +26,10 @@
 - [x] Build HTMX-based management UI
 - [ ] Implement form management interface
 - [ ] Create submission history view
-- [ ] Add user settings and configuration
-    - [ ] Registration disable/enable setting
-    - [ ] Database persistence for settings
-    - [ ] Registration route protection
+- [x] Add user settings and configuration
+    - [x] Registration disable/enable setting
+    - [x] Database persistence for settings
+    - [x] Registration route protection
 - [x] Implement authentication UI (login/register)
 
 ## Stage 4: API Implementation

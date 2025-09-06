@@ -76,6 +76,27 @@ func runMigrations() error {
 		return fmt.Errorf("failed to check for existing tables: %w", err)
 	}
 
+	// Check if app_settings table exists to determine if we need to run the second migration
+	var settingsTableName string
+	err = DB.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='app_settings'").Scan(&settingsTableName)
+
+	if err == sql.ErrNoRows {
+		// app_settings table doesn't exist, run second migration
+		log.Println("Running app settings migration...")
+		migrationSQL, err := os.ReadFile("migrations/002_app_settings.up.sql")
+		if err != nil {
+			return fmt.Errorf("failed to read migration file: %w", err)
+		}
+
+		if _, err := DB.Exec(string(migrationSQL)); err != nil {
+			return fmt.Errorf("failed to execute migration: %w", err)
+		}
+
+		log.Println("App settings migration completed successfully")
+	} else if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check for app_settings table: %w", err)
+	}
+
 	return nil
 }
 

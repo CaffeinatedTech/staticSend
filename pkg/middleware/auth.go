@@ -28,7 +28,7 @@ type AuthConfig struct {
 	PublicPaths []string
 }
 
-// AuthMiddleware provides JWT authentication middleware
+// AuthMiddleware provides JWT authentication middleware with cookie support
 func AuthMiddleware(config AuthConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,15 +38,45 @@ func AuthMiddleware(config AuthConfig) func(http.Handler) http.Handler {
 				return
 			}
 
-			tokenString, err := auth.GetTokenFromRequest(r)
+			var tokenString string
+			var err error
+
+			// First try to get token from Authorization header
+			tokenString, err = auth.GetTokenFromRequest(r)
 			if err != nil {
-				http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-				return
+				// If no Authorization header, try to get from cookie
+				if cookie, err := r.Cookie("auth_token"); err == nil {
+					tokenString = cookie.Value
+				} else {
+					// For web requests, redirect to login instead of 401 error
+					if r.Header.Get("HX-Request") == "true" {
+						// HTMX request, return 401
+						http.Error(w, "Unauthorized: authentication required", http.StatusUnauthorized)
+					} else {
+						// Regular browser request, redirect to login
+						http.Redirect(w, r, "/login", http.StatusFound)
+					}
+					return
+				}
 			}
 
 			claims, err := auth.ValidateToken(tokenString, config.SecretKey)
 			if err != nil {
-				http.Error(w, "Unauthorized: invalid token", http.StatusUnauthorized)
+				// Invalid token - clear the bad cookie and redirect to login
+				http.SetCookie(w, &http.Cookie{
+					Name:     "auth_token",
+					Value:    "",
+					Path:     "/",
+					HttpOnly: true,
+					Secure:   false,
+					MaxAge:   -1,
+				})
+				
+				if r.Header.Get("HX-Request") == "true" {
+					http.Error(w, "Unauthorized: invalid token", http.StatusUnauthorized)
+				} else {
+					http.Redirect(w, r, "/login", http.StatusFound)
+				}
 				return
 			}
 
@@ -59,7 +89,21 @@ func AuthMiddleware(config AuthConfig) func(http.Handler) http.Handler {
 			// Get user from database
 			user, err := models.GetUserByID(config.DB.Connection, userID)
 			if err != nil || user == nil {
-				http.Error(w, "Unauthorized: user not found", http.StatusUnauthorized)
+				// User not found - clear the bad cookie and redirect to login
+				http.SetCookie(w, &http.Cookie{
+					Name:     "auth_token",
+					Value:    "",
+					Path:     "/",
+					HttpOnly: true,
+					Secure:   false,
+					MaxAge:   -1,
+				})
+				
+				if r.Header.Get("HX-Request") == "true" {
+					http.Error(w, "Unauthorized: user not found", http.StatusUnauthorized)
+				} else {
+					http.Redirect(w, r, "/login", http.StatusFound)
+				}
 				return
 			}
 

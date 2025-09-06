@@ -1,0 +1,41 @@
+<div class="text-center">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Form Details</h3>
+    
+    <div class="space-y-4 text-left">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Form Name</label>
+            <p class="mt-1 text-sm text-gray-900">contact-form</p>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Form URL</label>
+            <p class="mt-1 text-sm text-gray-900 break-all">
+                https://your-domain.com/forms/contact-form
+            </p>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Embed Code</label>
+            <div class="mt-1">
+                <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+&lt;form action="https://your-domain.com/forms/contact-form" method="POST"&gt;
+    &lt;input type="text" name="name" placeholder="Your Name" required&gt;
+    &lt;input type="email" name="email" placeholder="Your Email" required&gt;
+    &lt;textarea name="message" placeholder="Your Message" required&gt;&lt;/textarea&gt;
+    &lt;button type="submit"&gt;Send Message&lt;/button&gt;
+&lt;/form&gt;</pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-6 flex justify-end space-x-3">
+        <button type="button" onclick="htmx.trigger('#modal', 'closeModal')" 
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+            Close
+        </button>
+        <button hx-get="/forms/1/submissions" hx-target="#modal-content"
+                class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+            View Submissions
+        </button>
+    </div>
+</div>

@@ -6,7 +6,9 @@
 - `go test ./...` - Run all tests
 - `go test -v ./pkg/...` - Run package tests with verbose output
 - `go test -v ./pkg/auth/` - Run authentication tests
+- `go test -v ./pkg/web/` - Run web handler tests
 - `go test -run TestName` - Run specific test
+- `./staticsend --port 3000 --db ./data/app.db` - Run with custom port and database
 - `go mod tidy` - Clean up dependencies
 - `go fmt ./...` - Format all Go code
 - `go vet ./...` - Run static analysis

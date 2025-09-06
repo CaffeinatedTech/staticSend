@@ -9,9 +9,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"staticsend/pkg/api"
 	"staticsend/pkg/auth"
 	"staticsend/pkg/database"
+	"staticsend/pkg/templates"
+	"staticsend/pkg/web"
 	customMiddleware "staticsend/pkg/middleware"
 )
 
@@ -35,30 +36,41 @@ func main() {
 	// Generate or load secret key for JWT
 	secretKey := getSecretKey()
 
-	// Create auth handler
-	authHandler := &api.AuthHandler{
-		DB:        &database.Database{Connection: database.DB},
-		SecretKey: secretKey,
-	}
+	// Create template manager and web handlers
+	tm := templates.NewTemplateManager()
+	webHandler := web.NewWebHandler(tm)
+	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
 	// Public routes
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("staticSend API Server"))
-	})
-
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 
-	// Authentication routes
-	r.Route("/auth", func(r chi.Router) {
-		r.Post("/register", authHandler.Register)
-		r.Post("/login", authHandler.Login)
-		r.Get("/health", authHandler.HealthCheck)
+	// Web pages
+	r.Get("/login", webHandler.LoginPage)
+	r.Get("/register", webHandler.RegisterPage)
+
+	// Form-based authentication routes
+	r.Post("/auth/register", webAuthHandler.RegisterForm)
+	r.Post("/auth/login", webAuthHandler.LoginForm)
+	r.Get("/auth/logout", webAuthHandler.Logout)
+
+	// Protected routes (require authentication)
+	r.Group(func(r chi.Router) {
+		r.Use(customMiddleware.AuthMiddleware(customMiddleware.AuthConfig{
+			SecretKey: secretKey,
+			DB:        &database.Database{Connection: database.DB},
+			PublicPaths: []string{"/login", "/register", "/health"},
+		}))
+
+		r.Get("/", webHandler.Dashboard) // Root route now protected
+		r.Get("/dashboard", webHandler.Dashboard)
+		r.Get("/forms/new", webHandler.CreateFormModal)
+		r.Get("/forms/{id}", webHandler.ViewFormModal)
 	})
 
 	// Test endpoint for rate limiting

@@ -5,6 +5,7 @@
 - `go run .` - Run the application
 - `go test ./...` - Run all tests
 - `go test -v ./pkg/...` - Run package tests with verbose output
+- `go test -v ./pkg/auth/` - Run authentication tests
 - `go test -run TestName` - Run specific test
 - `go mod tidy` - Clean up dependencies
 - `go fmt ./...` - Format all Go code
@@ -53,6 +54,13 @@
 - SQLite for development and production
 - Use transactions for write operations
 - Handle database migrations with goose
+
+### Email Service
+- Asynchronous processing with worker pool
+- Configurable queue size and worker count
+- Automatic retries with exponential backoff
+- Graceful shutdown support
+- Synchronous fallback option available
 
 ## Project Structure
 ```

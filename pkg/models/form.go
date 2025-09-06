@@ -1,0 +1,88 @@
+package models
+
+import (
+	"database/sql"
+	"time"
+)
+
+// Form represents a contact form configuration
+type Form struct {
+	ID          int64     `json:"id"`
+	UserID      int64     `json:"user_id"`
+	Name        string    `json:"name"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	RedirectURL string    `json:"redirect_url"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// CreateForm creates a new form in the database
+func CreateForm(db *sql.DB, userID int64, name, title, description, redirectURL string) (*Form, error) {
+	result, err := db.Exec(
+		"INSERT INTO forms (user_id, name, title, description, redirect_url) VALUES (?, ?, ?, ?, ?)",
+		userID, name, title, description, redirectURL,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return GetFormByID(db, id)
+}
+
+// GetFormByID retrieves a form by its ID
+func GetFormByID(db *sql.DB, id int64) (*Form, error) {
+	var form Form
+	err := db.QueryRow(
+		"SELECT id, user_id, name, title, description, redirect_url, created_at, updated_at FROM forms WHERE id = ?",
+		id,
+	).Scan(&form.ID, &form.UserID, &form.Name, &form.Title, &form.Description, &form.RedirectURL, &form.CreatedAt, &form.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &form, nil
+}
+
+// GetFormsByUserID retrieves all forms for a specific user
+func GetFormsByUserID(db *sql.DB, userID int64) ([]Form, error) {
+	rows, err := db.Query(
+		"SELECT id, user_id, name, title, description, redirect_url, created_at, updated_at FROM forms WHERE user_id = ? ORDER BY created_at DESC",
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var forms []Form
+	for rows.Next() {
+		var form Form
+		if err := rows.Scan(&form.ID, &form.UserID, &form.Name, &form.Title, &form.Description, &form.RedirectURL, &form.CreatedAt, &form.UpdatedAt); err != nil {
+			return nil, err
+		}
+		forms = append(forms, form)
+	}
+
+	return forms, nil
+}
+
+// FormExists checks if a form with the given name already exists for a user
+func FormExists(db *sql.DB, userID int64, name string) (bool, error) {
+	var exists bool
+	err := db.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM forms WHERE user_id = ? AND name = ?)",
+		userID, name,
+	).Scan(&exists)
+
+	return exists, err
+}

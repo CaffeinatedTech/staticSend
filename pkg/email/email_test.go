@@ -15,7 +15,7 @@ func TestNewEmailService(t *testing.T) {
 		UseTLS:   true,
 	}
 
-	service := NewEmailService(config)
+	service := NewEmailService(config, 100, 3, 3)
 
 	if service.config.Host != "smtp.example.com" {
 		t.Errorf("Expected host 'smtp.example.com', got '%s'", service.config.Host)
@@ -48,7 +48,7 @@ func TestBuildMessage(t *testing.T) {
 		UseTLS:   true,
 	}
 
-	service := NewEmailService(config)
+	service := NewEmailService(config, 100, 3, 3)
 
 	to := []string{"recipient@example.com"}
 	subject := "Test Subject"
@@ -83,7 +83,7 @@ func TestSendFormSubmission(t *testing.T) {
 		UseTLS:   true,
 	}
 
-	service := NewEmailService(config)
+	service := NewEmailService(config, 100, 3, 3)
 
 	formData := map[string]string{
 		"name":    "John Doe",
@@ -116,7 +116,7 @@ func TestSend_NoRecipients(t *testing.T) {
 		UseTLS:   true,
 	}
 
-	service := NewEmailService(config)
+	service := NewEmailService(config, 100, 3, 3)
 
 	err := service.Send([]string{}, "Test Subject", "Test body")
 
@@ -187,7 +187,7 @@ func TestEmailConfig_Validation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := NewEmailService(tt.config)
+			service := NewEmailService(tt.config, 100, 3, 3)
 
 			// Test that the service was created (validation happens at send time)
 			if service == nil {

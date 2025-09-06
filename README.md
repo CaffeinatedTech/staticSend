@@ -67,9 +67,18 @@ export STATICSEND_SMTP_PASS=your-app-password
 
 # Run the application
 ./staticsend
+
+# Or with custom port
+./staticsend -port=3000
 ```
 
 ## 📋 Configuration
+
+### Command Line Flags
+
+| Flag | Description | Default | Environment Variable |
+|------|-------------|---------|---------------------|
+| `-port` | HTTP server port | `8080` | `STATICSEND_PORT` |
 
 ### Environment Variables
 

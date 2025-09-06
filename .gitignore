@@ -1,0 +1,84 @@
+# Go build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binaries
+*.test
+*.test.exe
+
+# Go coverage files
+*.out
+coverage.html
+coverage.txt
+
+# Dependency directories - vendor/ contains downloaded dependencies
+vendor/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs - application logs
+*.log
+logs/
+
+# Environment files - sensitive credentials (create .env.example for template)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database files - development databases only
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+
+# Crush directory
+.crush/
+
+# Build output - compiled binaries and distributions
+dist/
+build/
+
+# Documentation build artifacts
+_site/
+.sass-cache/
+.jekyll-cache/
+
+# Backup files
+*.bak
+*.backup
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+[Tt]humbs.db
+
+# Note: The following files SHOULD be committed to the repository:
+# - go.mod and go.sum (dependency management)
+# - Dockerfile and .dockerignore (deployment configuration)
+# - Database migration files (schema changes)
+# - Configuration templates (.env.example)

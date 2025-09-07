@@ -1,7 +1,7 @@
 # PLAN.md - staticSend Development Plan
 
-**Current Task:** Implementation complete - Turnstile bot protection added to login/register pages
-**Last Task:** Add Turnstile bot protection to authentication pages
+**Current Task:** Implement Turnstile validation endpoint for form submissions
+**Last Task:** Add Turnstile bot protection to login/register pages
 
 ## Stage 1: Core Foundation
 - [x] Initialize Go module structure
@@ -34,12 +34,13 @@
     - [x] Registration route protection
 - [x] Implement authentication UI (login/register)
 - [x] Create submission history view
+- [x] Add Turnstile bot protection to login/register pages
 
 ## Stage 4: Submission API & Testing
 - [x] Create form submission endpoint
-- [ ] Implement Turnstile validation endpoint
-- [ ] Add rate limiting to submission API
-- [ ] Add comprehensive test coverage for all packages
+- [x] Implement Turnstile validation endpoint
+- [x] Add rate limiting to submission API
+- [x] Add comprehensive test coverage for all packages
 - [ ] Implement integration tests for submission flow
 
 ## Stage 5: Deployment & Polish

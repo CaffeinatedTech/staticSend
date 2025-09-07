@@ -76,8 +76,8 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 	
-	// Form submission endpoint (public)
-	r.Post("/api/v1/submit/{formKey}", submissionHandler.SubmitForm)
+	// Form submission endpoint (public) with rate limiting
+	r.With(customMiddleware.IPRateLimit(time.Minute, 10)).Post("/api/v1/submit/{formKey}", submissionHandler.SubmitForm)
 
 	// Web pages
 	r.Get("/login", webHandler.LoginPage)

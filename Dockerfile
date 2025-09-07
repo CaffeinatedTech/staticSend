@@ -40,8 +40,10 @@ COPY --chown=appuser:appgroup static/ ./static/
 COPY --chown=appuser:appgroup templates/ ./templates/
 COPY --chown=appuser:appgroup migrations/ ./migrations/
 
-# Create data directory for SQLite database
-RUN mkdir -p /app/data && chown appuser:appgroup /app/data
+# Create data directory for SQLite database with proper permissions
+RUN mkdir -p /app/data && \
+    chown -R appuser:appgroup /app/data && \
+    chmod -R 755 /app/data
 
 # Switch to non-root user
 USER appuser

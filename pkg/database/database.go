@@ -22,12 +22,21 @@ var DB *sql.DB
 func Init(dbPath string) error {
 	// Ensure the directory exists
 	dir := filepath.Dir(dbPath)
+	log.Printf("Creating database directory: %s", dir)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create database directory: %w", err)
 	}
 
+	// Check if directory is writable
+	testFile := filepath.Join(dir, ".write_test")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		return fmt.Errorf("database directory is not writable: %w", err)
+	}
+	os.Remove(testFile)
+
+	log.Printf("Opening database at: %s", dbPath)
 	// Open database connection
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", dbPath+"?_foreign_keys=on")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}

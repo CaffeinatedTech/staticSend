@@ -1,7 +1,7 @@
 # PLAN.md - staticSend Development Plan
 
-**Current Task:** Add rate limiting to submission API
-**Last Task:** Create submission history view
+**Current Task:** Implementation complete - Turnstile bot protection added to login/register pages
+**Last Task:** Add Turnstile bot protection to authentication pages
 
 ## Stage 1: Core Foundation
 - [x] Initialize Go module structure

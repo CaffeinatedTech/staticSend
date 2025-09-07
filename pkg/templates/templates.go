@@ -15,14 +15,15 @@ import (
 
 // TemplateData holds data for template rendering
 type TemplateData struct {
-	Title      string
-	User       *models.User
-	Error      string
-	Flash      string
-	ShowHeader bool
-	Forms      []*models.Form
-	Stats      *DashboardStats
-	Data       interface{} // Generic data field for additional data
+	Title                  string
+	User                   *models.User
+	Error                  string
+	Flash                  string
+	ShowHeader             bool
+	Forms                  []*models.Form
+	Stats                  *DashboardStats
+	Data                   interface{} // Generic data field for additional data
+	AuthTurnstilePublicKey string      // Turnstile public key for auth pages
 }
 
 // DashboardStats holds statistics for the dashboard

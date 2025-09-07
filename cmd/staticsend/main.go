@@ -39,10 +39,14 @@ func main() {
 	// Generate or load secret key for JWT
 	secretKey := getSecretKey()
 
+	// Get Turnstile configuration for auth pages
+	authTurnstilePublicKey := getEnv("STATICSEND_AUTH_TURNSTILE_PUBLIC_KEY", "")
+	authTurnstileSecretKey := getEnv("STATICSEND_AUTH_TURNSTILE_SECRET_KEY", "")
+	
 	// Create template manager and web handlers
 	tm := templates.NewTemplateManager()
-	webHandler := web.NewWebHandler(database.DB, tm)
-	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm)
+	webHandler := web.NewWebHandler(database.DB, tm, authTurnstilePublicKey)
+	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm, authTurnstilePublicKey, authTurnstileSecretKey)
 	settingsHandler := web.NewSettingsHandler(&database.Database{Connection: database.DB}, tm)
 	
 	// Create email service

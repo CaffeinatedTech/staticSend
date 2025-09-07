@@ -1,27 +1,33 @@
 package web
 
 import (
+	"context"
 	"net/http"
 
 	"staticsend/pkg/auth"
 	"staticsend/pkg/database"
 	"staticsend/pkg/models"
 	"staticsend/pkg/templates"
+	"staticsend/pkg/turnstile"
 )
 
 // WebAuthHandler handles web-based authentication (form submissions)
 type WebAuthHandler struct {
-	DB        *database.Database
-	SecretKey []byte
-	Templates *templates.TemplateManager
+	DB                     *database.Database
+	SecretKey              []byte
+	Templates              *templates.TemplateManager
+	AuthTurnstilePublicKey string
+	AuthTurnstileSecretKey string
 }
 
 // NewWebAuthHandler creates a new web auth handler
-func NewWebAuthHandler(db *database.Database, secretKey []byte, tm *templates.TemplateManager) *WebAuthHandler {
+func NewWebAuthHandler(db *database.Database, secretKey []byte, tm *templates.TemplateManager, authTurnstilePublicKey, authTurnstileSecretKey string) *WebAuthHandler {
 	return &WebAuthHandler{
-		DB:        db,
-		SecretKey: secretKey,
-		Templates: tm,
+		DB:                     db,
+		SecretKey:              secretKey,
+		Templates:              tm,
+		AuthTurnstilePublicKey: authTurnstilePublicKey,
+		AuthTurnstileSecretKey: authTurnstileSecretKey,
 	}
 }
 
@@ -50,6 +56,28 @@ func (h *WebAuthHandler) RegisterForm(w http.ResponseWriter, r *http.Request) {
 	if email == "" || password == "" {
 		h.renderRegisterPage(w, "Email and password are required")
 		return
+	}
+
+	// Validate Turnstile token if configured
+	if h.AuthTurnstileSecretKey != "" {
+		turnstileToken := r.FormValue("cf-turnstile-response")
+		if turnstileToken == "" {
+			h.renderRegisterPage(w, "Bot protection verification required")
+			return
+		}
+
+		validator := turnstile.NewValidator(h.AuthTurnstileSecretKey)
+		ctx := context.Background()
+		response, err := validator.Verify(ctx, turnstileToken, r.RemoteAddr)
+		if err != nil {
+			h.renderRegisterPage(w, "Bot protection verification failed")
+			return
+		}
+
+		if !response.IsValid() {
+			h.renderRegisterPage(w, "Bot protection verification failed")
+			return
+		}
 	}
 
 	// Check if user already exists
@@ -113,6 +141,28 @@ func (h *WebAuthHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate Turnstile token if configured
+	if h.AuthTurnstileSecretKey != "" {
+		turnstileToken := r.FormValue("cf-turnstile-response")
+		if turnstileToken == "" {
+			h.renderLoginPage(w, "Bot protection verification required")
+			return
+		}
+
+		validator := turnstile.NewValidator(h.AuthTurnstileSecretKey)
+		ctx := context.Background()
+		response, err := validator.Verify(ctx, turnstileToken, r.RemoteAddr)
+		if err != nil {
+			h.renderLoginPage(w, "Bot protection verification failed")
+			return
+		}
+
+		if !response.IsValid() {
+			h.renderLoginPage(w, "Bot protection verification failed")
+			return
+		}
+	}
+
 	// Get user by email
 	user, err := models.GetUserByEmail(h.DB.Connection, email)
 	if err != nil {
@@ -153,9 +203,10 @@ func (h *WebAuthHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 // renderRegisterPage renders the registration page with an optional error
 func (h *WebAuthHandler) renderRegisterPage(w http.ResponseWriter, errorMsg string) {
 	data := templates.TemplateData{
-		Title: "Register - staticSend",
-		Error: errorMsg,
-		ShowHeader: false,
+		Title:                  "Register - staticSend",
+		Error:                  errorMsg,
+		ShowHeader:             false,
+		AuthTurnstilePublicKey: h.AuthTurnstilePublicKey,
 	}
 	
 	h.Templates.Render(w, "auth/register.html", data)
@@ -164,9 +215,10 @@ func (h *WebAuthHandler) renderRegisterPage(w http.ResponseWriter, errorMsg stri
 // renderLoginPage renders the login page with an optional error
 func (h *WebAuthHandler) renderLoginPage(w http.ResponseWriter, errorMsg string) {
 	data := templates.TemplateData{
-		Title: "Login - staticSend",
-		Error: errorMsg,
-		ShowHeader: false,
+		Title:                  "Login - staticSend",
+		Error:                  errorMsg,
+		ShowHeader:             false,
+		AuthTurnstilePublicKey: h.AuthTurnstilePublicKey,
 	}
 	
 	h.Templates.Render(w, "auth/login.html", data)

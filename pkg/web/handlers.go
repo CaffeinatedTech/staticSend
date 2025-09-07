@@ -14,15 +14,17 @@ import (
 
 // WebHandler handles web page requests
 type WebHandler struct {
-	DB              *sql.DB
-	TemplateManager *templates.TemplateManager
+	DB                     *sql.DB
+	TemplateManager        *templates.TemplateManager
+	AuthTurnstilePublicKey string
 }
 
 // NewWebHandler creates a new web handler
-func NewWebHandler(db *sql.DB, tm *templates.TemplateManager) *WebHandler {
+func NewWebHandler(db *sql.DB, tm *templates.TemplateManager, authTurnstilePublicKey string) *WebHandler {
 	return &WebHandler{
-		DB:              db,
-		TemplateManager: tm,
+		DB:                     db,
+		TemplateManager:        tm,
+		AuthTurnstilePublicKey: authTurnstilePublicKey,
 	}
 }
 
@@ -31,8 +33,9 @@ func NewWebHandler(db *sql.DB, tm *templates.TemplateManager) *WebHandler {
 // LoginPage renders the login page
 func (h *WebHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	data := templates.TemplateData{
-		Title:      "Login - staticSend",
-		ShowHeader: false,
+		Title:                  "Login - staticSend",
+		ShowHeader:             false,
+		AuthTurnstilePublicKey: h.AuthTurnstilePublicKey,
 	}
 	
 	if err := h.TemplateManager.Render(w, "auth/login.html", data); err != nil {
@@ -43,8 +46,9 @@ func (h *WebHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 // RegisterPage renders the registration page
 func (h *WebHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	data := templates.TemplateData{
-		Title:      "Register - staticSend",
-		ShowHeader: false,
+		Title:                  "Register - staticSend",
+		ShowHeader:             false,
+		AuthTurnstilePublicKey: h.AuthTurnstilePublicKey,
 	}
 	
 	if err := h.TemplateManager.Render(w, "auth/register.html", data); err != nil {

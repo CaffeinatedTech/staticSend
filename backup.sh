@@ -129,13 +129,20 @@ export AWS_ACCESS_KEY_ID="${S3_ACCESS_KEY}"
 export AWS_SECRET_ACCESS_KEY="${S3_SECRET_KEY}"
 export AWS_DEFAULT_REGION="${S3_REGION:-us-east-1}"
 
-# Use s3api put-object instead of s3 cp to have more control over headers
-aws s3api put-object \
-  --bucket "${S3_BUCKET}" \
-  --key "${ARCHIVE_NAME}" \
-  --body "${ARCHIVE_PATH}" \
-  --endpoint-url "${S3_ENDPOINT}" \
-  --content-type "application/gzip"
+# Configure AWS CLI to disable new integrity checks that cause Content-Length issues
+# This fixes the breaking change introduced in AWS CLI v2.17+ and boto3 v1.36.0+
+export AWS_CONFIG_FILE="/tmp/aws_config"
+cat > "$AWS_CONFIG_FILE" << EOF
+[default]
+request_checksum_calculation = when_required
+response_checksum_validation = when_required
+EOF
+
+# Use standard s3 cp command which works reliably
+aws s3 cp \
+  "${ARCHIVE_PATH}" \
+  "s3://${S3_BUCKET}/${ARCHIVE_NAME}" \
+  --endpoint-url "${S3_ENDPOINT}"
 
 echo "Backup upload complete: ${ARCHIVE_NAME} (${ARCHIVE_SIZE})"
 

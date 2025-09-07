@@ -87,18 +87,45 @@ export TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 
 ### Environment Variables
 
+#### Core Application
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `STATICSEND_PORT` | HTTP server port | `8080` | No |
-| `STATICSEND_DB_PATH` | SQLite database path | `./staticsend.db` | No |
-| `STATICSEND_JWT_SECRET` | JWT signing secret | - | Yes |
-| `STATICSEND_SMTP_HOST` | SMTP server host | - | Yes |
-| `STATICSEND_SMTP_PORT` | SMTP server port | - | Yes |
-| `STATICSEND_SMTP_USER` | SMTP username | - | Yes |
-| `STATICSEND_SMTP_PASS` | SMTP password | - | Yes |
-| `STATICSEND_TURNSTILE_VERIFY_URL` | Turnstile verify URL | `https://challenges.cloudflare.com/turnstile/v0/siteverify` | No |
+| `PORT` | HTTP server port | `8080` | No |
+| `DATABASE_PATH` | SQLite database path | `./data/staticsend.db` | No |
+| `JWT_SECRET_KEY` | JWT signing secret | - | Yes |
+| `REGISTRATION_ENABLED` | Enable user registration | `true` | No |
+
+#### Email Configuration
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `EMAIL_HOST` | SMTP server host | - | Yes |
+| `EMAIL_PORT` | SMTP server port | `587` | No |
+| `EMAIL_USERNAME` | SMTP username | - | Yes |
+| `EMAIL_PASSWORD` | SMTP password | - | Yes |
+| `EMAIL_FROM` | From email address | - | Yes |
+| `EMAIL_USE_TLS` | Use TLS for SMTP | `true` | No |
+
+#### Turnstile Bot Protection
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
 | `TURNSTILE_PUBLIC_KEY` | Turnstile public key for login/register pages | - | No |
 | `TURNSTILE_SECRET_KEY` | Turnstile secret key for login/register pages | - | No |
+
+#### S3 Backup Configuration (Optional)
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `S3_ENDPOINT` | S3-compatible storage endpoint | - | For backups |
+| `S3_BUCKET` | S3 bucket name | - | For backups |
+| `S3_ACCESS_KEY` | S3 access key | - | For backups |
+| `S3_SECRET_KEY` | S3 secret key | - | For backups |
+| `S3_REGION` | S3 region | `us-east-1` | No |
+| `CLEANUP_OLD_BACKUPS` | Auto-delete backups older than 30 days | `true` | No |
+
+#### Cronivore Monitoring (Optional)
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `CRONIVORE_CHECK_SLUG` | Cronivore check slug for backup monitoring | - | No |
+| `CRONIVORE_URL` | Cronivore service URL | `https://cronivore.com` | No |
 
 ## 🛠️ Usage
 
@@ -218,14 +245,18 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - staticsend_data:/data
+      - staticsend_data:/app/data
     environment:
-      - STATICSEND_PORT=8080
-      - STATICSEND_JWT_SECRET=${JWT_SECRET}
-      - STATICSEND_SMTP_HOST=${SMTP_HOST}
-      - STATICSEND_SMTP_PORT=${SMTP_PORT}
-      - STATICSEND_SMTP_USER=${SMTP_USER}
-      - STATICSEND_SMTP_PASS=${SMTP_PASS}
+      - PORT=8080
+      - DATABASE_PATH=/app/data/staticsend.db
+      - JWT_SECRET_KEY=${JWT_SECRET}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - TURNSTILE_PUBLIC_KEY=${TURNSTILE_PUBLIC_KEY}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
     restart: unless-stopped
 
 volumes:
@@ -234,11 +265,46 @@ volumes:
 
 ### Coolify Deployment
 
-1. Create a new service in Coolify
-2. Use the Docker image: `ghcr.io/CaffeinatedTech/staticsend:latest`
-3. Configure environment variables
-4. Add persistent volume for database
-5. Deploy!
+1. Create a new service in Coolify using GitHub repository
+2. Select "Dockerfile" as build pack
+3. Configure environment variables (see Configuration section above)
+4. Add persistent volume: `/app/data` → `/var/lib/coolify/staticsend/data`
+5. Deploy with health check on `/health` endpoint
+
+For detailed Coolify setup instructions, see [docs/deployment/coolify-setup.md](docs/deployment/coolify-setup.md)
+
+## 💾 Automated Backups
+
+StaticSend includes an automated backup system that uploads database backups to S3-compatible storage.
+
+### Features
+- **SQLite database backup** using safe `.backup` command
+- **S3-compatible storage** (AWS S3, DigitalOcean Spaces, Backblaze B2, etc.)
+- **Automatic compression** and timestamping
+- **Old backup cleanup** (configurable retention period)
+- **Cronivore monitoring** integration for backup job monitoring
+- **Coolify cron job** integration
+
+### Quick Setup
+
+1. **Configure S3 environment variables** in Coolify:
+   ```bash
+   S3_ENDPOINT=https://s3.amazonaws.com
+   S3_BUCKET=your-backup-bucket
+   S3_ACCESS_KEY=your-access-key
+   S3_SECRET_KEY=your-secret-key
+   ```
+
+2. **Create Coolify cron job**:
+   - Schedule: `0 2 * * *` (daily at 2 AM)
+   - Command: `/app/backup.sh`
+
+3. **Optional Cronivore monitoring**:
+   ```bash
+   CRONIVORE_CHECK_SLUG=your-check-slug
+   ```
+
+For complete backup setup instructions, see [docs/deployment/backup-setup.md](docs/deployment/backup-setup.md)
 
 ## 🤝 Contributing
 

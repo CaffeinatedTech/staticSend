@@ -98,9 +98,9 @@ func main() {
 	r.Get("/login", webHandler.LoginPage)
 	r.Get("/register", webHandler.RegisterPage)
 
-	// Form-based authentication routes
-	r.Post("/auth/register", webAuthHandler.RegisterForm)
-	r.Post("/auth/login", webAuthHandler.LoginForm)
+	// Form-based authentication routes with rate limiting
+	r.With(customMiddleware.IPRateLimit(time.Minute, 5)).Post("/auth/register", webAuthHandler.RegisterForm)
+	r.With(customMiddleware.IPRateLimit(time.Minute, 10)).Post("/auth/login", webAuthHandler.LoginForm)
 	r.Get("/auth/logout", webAuthHandler.Logout)
 
 	// Protected routes (require authentication)

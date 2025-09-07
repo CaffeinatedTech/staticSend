@@ -149,7 +149,11 @@ echo "Backup upload complete: ${ARCHIVE_NAME} (${ARCHIVE_SIZE})"
 # Optional: Clean up old backups (keep last 30 days)
 if [[ "${CLEANUP_OLD_BACKUPS:-true}" == "true" ]]; then
   echo "Cleaning up old backups (keeping last 30 days)..."
-  CUTOFF_DATE=$(date -d '30 days ago' +%Y-%m-%d)
+  # Alpine Linux uses busybox date which doesn't support -d flag
+  # Calculate cutoff date using arithmetic (30 days = 30 * 24 * 60 * 60 = 2592000 seconds)
+  CUTOFF_TIMESTAMP=$(($(date +%s) - 2592000))
+  CUTOFF_DATE=$(date -d "@${CUTOFF_TIMESTAMP}" +%Y-%m-%d 2>/dev/null || date -r "${CUTOFF_TIMESTAMP}" +%Y-%m-%d)
+  
   aws s3 ls "s3://${S3_BUCKET}/" --endpoint-url "${S3_ENDPOINT}" | \
     grep "staticsend-backup-" | \
     awk '{print $4}' | \

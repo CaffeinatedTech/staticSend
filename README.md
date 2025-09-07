@@ -44,8 +44,8 @@ docker run -d \
   -e STATICSEND_SMTP_PORT=587 \
   -e STATICSEND_SMTP_USER=your-email@gmail.com \
   -e STATICSEND_SMTP_PASS=your-app-password \
-  -e STATICSEND_AUTH_TURNSTILE_PUBLIC_KEY=your-turnstile-public-key \
-  -e STATICSEND_AUTH_TURNSTILE_SECRET_KEY=your-turnstile-secret-key \
+  -e TURNSTILE_PUBLIC_KEY=your-turnstile-public-key \
+  -e TURNSTILE_SECRET_KEY=your-turnstile-secret-key \
   ghcr.io/CaffeinatedTech/staticsend:latest
 ```
 
@@ -67,8 +67,8 @@ export STATICSEND_SMTP_HOST=smtp.gmail.com
 export STATICSEND_SMTP_PORT=587
 export STATICSEND_SMTP_USER=your-email@gmail.com
 export STATICSEND_SMTP_PASS=your-app-password
-export STATICSEND_AUTH_TURNSTILE_PUBLIC_KEY=your-turnstile-public-key
-export STATICSEND_AUTH_TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+export TURNSTILE_PUBLIC_KEY=your-turnstile-public-key
+export TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 
 # Run the application
 ./staticsend
@@ -97,8 +97,8 @@ export STATICSEND_AUTH_TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 | `STATICSEND_SMTP_USER` | SMTP username | - | Yes |
 | `STATICSEND_SMTP_PASS` | SMTP password | - | Yes |
 | `STATICSEND_TURNSTILE_VERIFY_URL` | Turnstile verify URL | `https://challenges.cloudflare.com/turnstile/v0/siteverify` | No |
-| `STATICSEND_AUTH_TURNSTILE_PUBLIC_KEY` | Turnstile public key for login/register pages | - | No |
-| `STATICSEND_AUTH_TURNSTILE_SECRET_KEY` | Turnstile secret key for login/register pages | - | No |
+| `TURNSTILE_PUBLIC_KEY` | Turnstile public key for login/register pages | - | No |
+| `TURNSTILE_SECRET_KEY` | Turnstile secret key for login/register pages | - | No |
 
 ## 🛠️ Usage
 

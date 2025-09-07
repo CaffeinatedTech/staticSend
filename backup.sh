@@ -149,19 +149,41 @@ echo "Backup upload complete: ${ARCHIVE_NAME} (${ARCHIVE_SIZE})"
 # Optional: Clean up old backups (keep last 30 days)
 if [[ "${CLEANUP_OLD_BACKUPS:-true}" == "true" ]]; then
   echo "Cleaning up old backups (keeping last 30 days)..."
-  # Alpine Linux uses busybox date which doesn't support -d flag
-  # Calculate cutoff date using arithmetic (30 days = 30 * 24 * 60 * 60 = 2592000 seconds)
-  CUTOFF_TIMESTAMP=$(($(date +%s) - 2592000))
-  CUTOFF_DATE=$(date -d "@${CUTOFF_TIMESTAMP}" +%Y-%m-%d 2>/dev/null || date -r "${CUTOFF_TIMESTAMP}" +%Y-%m-%d)
+  # Alpine Linux uses busybox date - use a simpler approach
+  # Get current date components and calculate 30 days ago manually
+  CURRENT_YEAR=$(date +%Y)
+  CURRENT_MONTH=$(date +%m)
+  CURRENT_DAY=$(date +%d)
+  
+  # Simple approach: subtract 30 from day, adjust month/year if needed
+  # This is approximate but safe for cleanup purposes
+  CUTOFF_DAY=$((CURRENT_DAY - 30))
+  CUTOFF_MONTH=$CURRENT_MONTH
+  CUTOFF_YEAR=$CURRENT_YEAR
+  
+  if [ $CUTOFF_DAY -le 0 ]; then
+    CUTOFF_MONTH=$((CURRENT_MONTH - 1))
+    CUTOFF_DAY=$((CUTOFF_DAY + 30))
+    if [ $CUTOFF_MONTH -le 0 ]; then
+      CUTOFF_MONTH=12
+      CUTOFF_YEAR=$((CURRENT_YEAR - 1))
+    fi
+  fi
+  
+  # Format with leading zeros
+  CUTOFF_DATE=$(printf "%04d-%02d-%02d" $CUTOFF_YEAR $CUTOFF_MONTH $CUTOFF_DAY)
+  echo "Deleting backups older than: $CUTOFF_DATE"
   
   aws s3 ls "s3://${S3_BUCKET}/" --endpoint-url "${S3_ENDPOINT}" | \
     grep "staticsend-backup-" | \
     awk '{print $4}' | \
     while read -r backup_file; do
-      backup_date=$(echo "$backup_file" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
-      if [[ "$backup_date" < "$CUTOFF_DATE" ]]; then
-        echo "Deleting old backup: $backup_file"
-        aws s3 rm "s3://${S3_BUCKET}/$backup_file" --endpoint-url "${S3_ENDPOINT}" || echo "Warning: Failed to delete $backup_file"
+      if [ -n "$backup_file" ]; then
+        backup_date=$(echo "$backup_file" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        if [ -n "$backup_date" ] && [[ "$backup_date" < "$CUTOFF_DATE" ]]; then
+          echo "Deleting old backup: $backup_file"
+          aws s3 rm "s3://${S3_BUCKET}/$backup_file" --endpoint-url "${S3_ENDPOINT}" || echo "Warning: Failed to delete $backup_file"
+        fi
       fi
     done
 fi

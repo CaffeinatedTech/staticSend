@@ -5,13 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"staticsend/pkg/api"
-	"staticsend/pkg/auth"
+	"staticsend/pkg/config"
 	"staticsend/pkg/database"
 	"staticsend/pkg/email"
 	"staticsend/pkg/templates"
@@ -20,8 +19,12 @@ import (
 )
 
 func main() {
-	port := flag.String("port", getEnv("STATICSEND_PORT", "8080"), "Port to listen on")
-	dbPath := flag.String("db", getEnv("STATICSEND_DB_PATH", "./data/staticsend.db"), "Database file path")
+	// Load configuration from environment variables
+	cfg := config.LoadConfig()
+	
+	// Allow command line overrides
+	port := flag.String("port", cfg.Port, "Port to listen on")
+	dbPath := flag.String("db", cfg.DatabasePath, "Database file path")
 	help := flag.Bool("help", false, "Show help")
 	flag.Parse()
 
@@ -29,19 +32,23 @@ func main() {
 		flag.Usage()
 		return
 	}
+	
+	// Update config with command line values
+	cfg.Port = *port
+	cfg.DatabasePath = *dbPath
 
 	// Initialize database
-	if err := database.Init(*dbPath); err != nil {
+	if err := database.Init(cfg.DatabasePath); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer database.Close()
 
-	// Generate or load secret key for JWT
-	secretKey := getSecretKey()
+	// Use JWT secret from config
+	secretKey := []byte(cfg.JWTSecretKey)
 
-	// Get Turnstile configuration for auth pages
-	authTurnstilePublicKey := getEnv("STATICSEND_AUTH_TURNSTILE_PUBLIC_KEY", "")
-	authTurnstileSecretKey := getEnv("STATICSEND_AUTH_TURNSTILE_SECRET_KEY", "")
+	// Use Turnstile configuration from config
+	authTurnstilePublicKey := cfg.TurnstilePublicKey
+	authTurnstileSecretKey := cfg.TurnstileSecretKey
 	
 	// Create template manager and web handlers
 	tm := templates.NewTemplateManager()
@@ -49,8 +56,16 @@ func main() {
 	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm, authTurnstilePublicKey, authTurnstileSecretKey)
 	settingsHandler := web.NewSettingsHandler(&database.Database{Connection: database.DB}, tm)
 	
-	// Create email service
-	emailService := createEmailService()
+	// Create email service from config
+	emailConfig := email.EmailConfig{
+		Host:     cfg.EmailHost,
+		Port:     cfg.EmailPort,
+		Username: cfg.EmailUsername,
+		Password: cfg.EmailPassword,
+		From:     cfg.EmailFrom,
+		UseTLS:   cfg.EmailUseTLS,
+	}
+	emailService := email.NewEmailService(emailConfig, 100, 10, 5)
 	
 	// Create API handlers
 	formHandler := api.NewFormHandler(database.DB)
@@ -118,81 +133,13 @@ func main() {
 		w.Write([]byte("Rate limited endpoint - you should see this only 2 times per second per IP"))
 	})
 
-	log.Printf("Starting server on :%s", *port)
-	if err := http.ListenAndServe(":"+*port, r); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
-	}
+	log.Printf("Server starting on port %s", cfg.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
 }
 
-func getEnv(key, defaultValue string) string {
+func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
-	return defaultValue
-}
-
-// getSecretKey retrieves or generates the JWT secret key
-func getSecretKey() []byte {
-	// Try to get from environment variable
-	if envKey := os.Getenv("STATICSEND_JWT_SECRET"); envKey != "" {
-		return []byte(envKey)
-	}
-
-	// For development, generate a new key each time
-	// In production, this should be a persistent secret
-	key, err := auth.GenerateSecretKey()
-	if err != nil {
-		log.Fatalf("Failed to generate secret key: %v", err)
-	}
-	
-	log.Println("WARNING: Using auto-generated JWT secret key. For production, set STATICSEND_JWT_SECRET environment variable.")
-	return key
-}
-
-// createEmailService creates and configures the email service
-func createEmailService() *email.EmailService {
-	// Get SMTP configuration from environment variables
-	host := getEnv("STATICSEND_SMTP_HOST", "")
-	portStr := getEnv("STATICSEND_SMTP_PORT", "587")
-	username := getEnv("STATICSEND_SMTP_USER", "")
-	password := getEnv("STATICSEND_SMTP_PASS", "")
-	from := getEnv("STATICSEND_SMTP_FROM", username)
-	
-	// Convert port to integer
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		port = 587 // default port
-	}
-	
-	// If no SMTP configuration is provided, create a dummy service that logs emails
-	if host == "" || username == "" || password == "" {
-		log.Println("WARNING: No SMTP configuration found. Emails will be logged to console instead of being sent.")
-		// Create a minimal config for development
-		config := email.EmailConfig{
-			Host:     "localhost",
-			Port:     587,
-			Username: "noreply@example.com",
-			Password: "",
-			From:     "noreply@example.com",
-			UseTLS:   false,
-		}
-		return email.NewEmailService(config, 100, 5, 3)
-	}
-	
-	config := email.EmailConfig{
-		Host:     host,
-		Port:     port,
-		Username: username,
-		Password: password,
-		From:     from,
-		UseTLS:   true, // Assume TLS for production
-	}
-	
-	// Test the connection
-	if err := email.NewEmailService(config, 100, 5, 3).TestConnection(); err != nil {
-		log.Printf("WARNING: SMTP connection test failed: %v", err)
-		log.Println("Emails may not be sent successfully. Check your SMTP configuration.")
-	}
-	
-	return email.NewEmailService(config, 100, 5, 3)
+	return fallback
 }

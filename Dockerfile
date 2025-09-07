@@ -23,7 +23,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/static
 FROM alpine:latest
 
 # Install runtime dependencies
-RUN apk --no-cache add ca-certificates sqlite tzdata
+RUN apk --no-cache add ca-certificates sqlite tzdata aws-cli curl
 
 # Create app user
 RUN addgroup -g 1001 -S appgroup && \
@@ -39,6 +39,10 @@ COPY --from=builder /app/main .
 COPY --chown=appuser:appgroup static/ ./static/
 COPY --chown=appuser:appgroup templates/ ./templates/
 COPY --chown=appuser:appgroup migrations/ ./migrations/
+
+# Copy backup script
+COPY --chown=appuser:appgroup backup.sh ./backup.sh
+RUN chmod +x /app/backup.sh
 
 # Create data directory for SQLite database with proper permissions
 RUN mkdir -p /app/data && \

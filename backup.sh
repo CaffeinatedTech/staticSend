@@ -124,10 +124,18 @@ echo "Archive size: ${ARCHIVE_SIZE}"
 # --- Upload ---
 echo "Uploading ${ARCHIVE_NAME} to S3 bucket '${S3_BUCKET}'..."
 # Use aws-cli to upload the archive to the S3-compatible storage.
-aws s3 cp \
-  "${ARCHIVE_PATH}" \
-  "s3://${S3_BUCKET}/${ARCHIVE_NAME}" \
-  --endpoint-url "${S3_ENDPOINT}"
+# Configure AWS CLI to handle Content-Length properly
+export AWS_ACCESS_KEY_ID="${S3_ACCESS_KEY}"
+export AWS_SECRET_ACCESS_KEY="${S3_SECRET_KEY}"
+export AWS_DEFAULT_REGION="${S3_REGION:-us-east-1}"
+
+# Use s3api put-object instead of s3 cp to have more control over headers
+aws s3api put-object \
+  --bucket "${S3_BUCKET}" \
+  --key "${ARCHIVE_NAME}" \
+  --body "${ARCHIVE_PATH}" \
+  --endpoint-url "${S3_ENDPOINT}" \
+  --content-type "application/gzip"
 
 echo "Backup upload complete: ${ARCHIVE_NAME} (${ARCHIVE_SIZE})"
 

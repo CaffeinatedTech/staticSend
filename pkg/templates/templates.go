@@ -1,6 +1,7 @@
 package templates
 
 import (
+ 	"fmt"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -52,9 +53,21 @@ func NewTemplateManager() *TemplateManager {
 // templateFuncMap returns the template function map
 func (tm *TemplateManager) templateFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"unmarshalJSON": func(s string) (map[string]interface{}, error) {
+		"unmarshalJSON": func(v interface{}) (map[string]interface{}, error) {
+			var b []byte
+			switch t := v.(type) {
+			case string:
+				b = []byte(t)
+			case []byte:
+				b = t
+			case json.RawMessage:
+				b = []byte(t)
+			default:
+				return nil, fmt.Errorf("unmarshalJSON: unsupported type %T", v)
+			}
+
 			var data map[string]interface{}
-			if err := json.Unmarshal([]byte(s), &data); err != nil {
+			if err := json.Unmarshal(b, &data); err != nil {
 				return nil, err
 			}
 			return data, nil

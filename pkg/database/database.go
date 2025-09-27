@@ -126,6 +126,24 @@ func runMigrations() error {
 		return fmt.Errorf("failed to check for forms table columns: %w", err)
 	}
 
+	// Ensure callback_url column exists (005 migration)
+	var callbackColumn string
+	err = DB.QueryRow("SELECT name FROM pragma_table_info('forms') WHERE name = 'callback_url'").Scan(&callbackColumn)
+	if err == sql.ErrNoRows {
+		log.Println("Running callback_url column migration...")
+		migrationSQL, err := os.ReadFile("migrations/005_add_callback_url.up.sql")
+		if err != nil {
+			return fmt.Errorf("failed to read migration file: %w", err)
+		}
+
+		if _, err := DB.Exec(string(migrationSQL)); err != nil {
+			return fmt.Errorf("failed to execute migration: %w", err)
+		}
+		log.Println("callback_url column migration completed successfully")
+	} else if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check for callback_url column: %w", err)
+	}
+
 	return nil
 }
 

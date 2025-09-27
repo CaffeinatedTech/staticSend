@@ -12,6 +12,7 @@ A self-hosted, secure contact form processing service for static websites. Enabl
 - **🛡️ Authentication Bot Protection** - Optional Turnstile protection for login/register pages
 - **⏱️ Rate Limiting** - IP-based request limiting to prevent abuse
 - **📧 Email Forwarding** - Send form submissions directly to your inbox
+- **↪️ Optional Callback Redirect** - Redirect users to a custom URL after successful submission
 - **🖥️ Web Management UI** - HTMX-based interface for easy form management
 - **🐳 Docker Ready** - Easy deployment with containerization
 - **💾 SQLite Database** - Simple, file-based persistence
@@ -137,6 +138,7 @@ export TURNSTILE_SECRET_KEY=your-turnstile-secret-key
    - Form name and domain
    - Cloudflare Turnstile keys (public and secret)
    - Destination email address
+   - Optional Callback URL (redirect users here after a successful submission)
 
 ### 2. Integrate with Your Static Site
 
@@ -165,6 +167,8 @@ Form submissions will be:
 3. Forwarded to your specified email address
 4. Stored in the database for review
 
+If you configured a Callback URL on the form, the submitter will be redirected to that URL with an HTTP 303 See Other after a successful submission. If no Callback URL is configured, the API responds with a JSON payload indicating success (HTTP 201 Created).
+
 ## 🔌 API Reference
 
 ### Public Endpoints
@@ -177,14 +181,28 @@ Content-Type: application/x-www-form-urlencoded
 name=John&email=john@example.com&message=Hello&cf-turnstile-response=token
 ```
 
+Response:
+
+- 201 Created with JSON body when no Callback URL is configured on the form:
+
+```json
+{
+  "success": true,
+  "message": "Form submitted successfully",
+  "submission_id": 123
+}
+```
+
+- 303 See Other redirect to the configured Callback URL when present.
+
 ### Management Endpoints (Require Authentication)
 
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/forms` - List all forms
-- `POST /api/forms` - Create new form
+- `POST /api/forms` - Create new form (fields: `name`, `domain`, `turnstile_secret`, `forward_email`, `callback_url` [optional])
 - `GET /api/forms/{id}` - Get form details
-- `PUT /api/forms/{id}` - Update form
+- `PUT /api/forms/{id}` - Update form (fields: `name`, `domain`, `turnstile_secret`, `forward_email`, `callback_url` [optional])
 - `DELETE /api/forms/{id}` - Delete form
 - `GET /api/submissions` - List submissions (with optional form_id filter)
 

@@ -3,6 +3,9 @@
 **Status:** ✅ **COMPLETE** - StaticSend is production-ready with full deployment and backup system
 **Last Completed:** Automated S3 backup system with Cronivore monitoring integration
 
+**Current Task:** Add optional callback URL to forms, redirecting submitters on success. Update schema, models, API, templates, and tests. (Started: 2025-09-27)
+**Last Task:** N/A (new enhancement)
+
 ## Stage 1: Core Foundation
 - [x] Initialize Go module structure
 - [x] Set up basic HTTP server with chi router

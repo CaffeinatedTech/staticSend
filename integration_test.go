@@ -135,7 +135,7 @@ func SetupIntegrationTest(t *testing.T) *IntegrationTestSuite {
 	}
 	
 	// Create test form
-	testForm, err := models.CreateForm(database.DB, testUser.ID, "Test Form", "example.com", "test-public", "test-secret", "admin@example.com")
+	testForm, err := models.CreateForm(database.DB, testUser.ID, "Test Form", "example.com", "test-secret", "admin@example.com", "https://example.com/callback", "formkey-int-001")
 	if err != nil {
 		t.Fatalf("Failed to create test form: %v", err)
 	}

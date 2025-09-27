@@ -13,6 +13,7 @@ type Form struct {
 	Domain          string    `json:"domain"`
 	TurnstileSecret string    `json:"turnstile_secret"` // Private key for validation
 	ForwardEmail    string    `json:"forward_email"`
+	CallbackURL     string    `json:"callback_url,omitempty"`
 	FormKey         string    `json:"form_key"`         // Generated unique key
 	SubmissionCount int       `json:"submission_count"`
 	CreatedAt       time.Time `json:"created_at"`
@@ -20,10 +21,10 @@ type Form struct {
 }
 
 // CreateForm creates a new form in the database
-func CreateForm(db *sql.DB, userID int64, name, domain, turnstileSecret, forwardEmail, formKey string) (*Form, error) {
+func CreateForm(db *sql.DB, userID int64, name, domain, turnstileSecret, forwardEmail, callbackURL, formKey string) (*Form, error) {
 	result, err := db.Exec(
-		"INSERT INTO forms (user_id, name, domain, turnstile_secret, forward_email, form_key) VALUES (?, ?, ?, ?, ?, ?)",
-		userID, name, domain, turnstileSecret, forwardEmail, formKey,
+		"INSERT INTO forms (user_id, name, domain, turnstile_secret, forward_email, callback_url, form_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		userID, name, domain, turnstileSecret, forwardEmail, callbackURL, formKey,
 	)
 	if err != nil {
 		return nil, err
@@ -41,9 +42,9 @@ func CreateForm(db *sql.DB, userID int64, name, domain, turnstileSecret, forward
 func GetFormByID(db *sql.DB, id int64) (*Form, error) {
 	var form Form
 	err := db.QueryRow(
-		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, form_key, created_at, updated_at FROM forms WHERE id = ?",
+		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, COALESCE(callback_url, ''), form_key, created_at, updated_at FROM forms WHERE id = ?",
 		id,
-	).Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.FormKey, &form.CreatedAt, &form.UpdatedAt)
+	).Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.CallbackURL, &form.FormKey, &form.CreatedAt, &form.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -58,7 +59,7 @@ func GetFormByID(db *sql.DB, id int64) (*Form, error) {
 // GetFormsByUserID retrieves all forms for a specific user
 func GetFormsByUserID(db *sql.DB, userID int64) ([]Form, error) {
 	rows, err := db.Query(
-		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, form_key, created_at, updated_at FROM forms WHERE user_id = ? ORDER BY created_at DESC",
+		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, COALESCE(callback_url, ''), form_key, created_at, updated_at FROM forms WHERE user_id = ? ORDER BY created_at DESC",
 		userID,
 	)
 	if err != nil {
@@ -69,7 +70,7 @@ func GetFormsByUserID(db *sql.DB, userID int64) ([]Form, error) {
 	var forms []Form
 	for rows.Next() {
 		var form Form
-		if err := rows.Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.FormKey, &form.CreatedAt, &form.UpdatedAt); err != nil {
+		if err := rows.Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.CallbackURL, &form.FormKey, &form.CreatedAt, &form.UpdatedAt); err != nil {
 			return nil, err
 		}
 		forms = append(forms, form)
@@ -93,9 +94,9 @@ func FormExists(db *sql.DB, userID int64, name string) (bool, error) {
 func GetFormByKey(db *sql.DB, formKey string) (*Form, error) {
 	var form Form
 	err := db.QueryRow(
-		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, form_key, created_at, updated_at FROM forms WHERE form_key = ?",
+		"SELECT id, user_id, name, domain, turnstile_secret, forward_email, COALESCE(callback_url, ''), form_key, created_at, updated_at FROM forms WHERE form_key = ?",
 		formKey,
-	).Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.FormKey, &form.CreatedAt, &form.UpdatedAt)
+	).Scan(&form.ID, &form.UserID, &form.Name, &form.Domain, &form.TurnstileSecret, &form.ForwardEmail, &form.CallbackURL, &form.FormKey, &form.CreatedAt, &form.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -108,10 +109,10 @@ func GetFormByKey(db *sql.DB, formKey string) (*Form, error) {
 }
 
 // UpdateForm updates a form in the database
-func UpdateForm(db *sql.DB, formID int64, name, domain, turnstileSecret, forwardEmail string) error {
+func UpdateForm(db *sql.DB, formID int64, name, domain, turnstileSecret, forwardEmail, callbackURL string) error {
 	_, err := db.Exec(
-		"UPDATE forms SET name = ?, domain = ?, turnstile_secret = ?, forward_email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-		name, domain, turnstileSecret, forwardEmail, formID,
+		"UPDATE forms SET name = ?, domain = ?, turnstile_secret = ?, forward_email = ?, callback_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		name, domain, turnstileSecret, forwardEmail, callbackURL, formID,
 	)
 	return err
 }

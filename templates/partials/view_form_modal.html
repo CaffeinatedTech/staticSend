@@ -23,6 +23,13 @@
             <p class="mt-1 text-sm text-gray-900">{{$form.ForwardEmail}}</p>
         </div>
         
+        {{if $form.CallbackURL}}
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Callback URL</label>
+            <p class="mt-1 text-sm text-gray-900 break-all">{{$form.CallbackURL}}</p>
+        </div>
+        {{end}}
+        
         <div>
             <label class="block text-sm font-medium text-gray-700">Form Key</label>
             <p class="mt-1 text-sm text-gray-900 break-all">{{$form.FormKey}}</p>

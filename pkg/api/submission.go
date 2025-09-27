@@ -115,14 +115,20 @@ func (h *SubmissionHandler) SubmitForm(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// Return success response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success": true,
-		"message": "Form submitted successfully",
-		"submission_id": submission.ID,
-	})
+    // If a callback URL is configured for this form, redirect the end-user
+    if form.CallbackURL != "" {
+        http.Redirect(w, r, form.CallbackURL, http.StatusSeeOther)
+        return
+    }
+
+    // Otherwise return success JSON response
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "success": true,
+        "message": "Form submitted successfully",
+        "submission_id": submission.ID,
+    })
 }
 
 // getClientIP extracts the client IP address from the request

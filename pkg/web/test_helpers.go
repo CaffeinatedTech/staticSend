@@ -63,6 +63,16 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("Failed to execute turnstile key fix migration: %v", err)
 	}
 
+    // Run callback URL migration
+    migrationSQL, err = os.ReadFile("../../migrations/005_add_callback_url.up.sql")
+    if err != nil {
+        t.Fatalf("Failed to read callback_url migration file: %v", err)
+    }
+
+    if _, err := db.Exec(string(migrationSQL)); err != nil {
+        t.Fatalf("Failed to execute callback_url migration: %v", err)
+    }
+
 	return db
 }
 

@@ -29,7 +29,7 @@ func TestFormSubmissions_RendersSubmittedData(t *testing.T) {
 		t.Fatalf("CreateUser: %v", err)
 	}
 
-	form, err := models.CreateForm(db, user.ID, "Contact", "example.com", "secret", "dest@example.com", "formkey-123")
+	form, err := models.CreateForm(db, user.ID, "Contact", "example.com", "secret", "dest@example.com", "", "formkey-123")
 	if err != nil {
 		t.Fatalf("CreateForm: %v", err)
 	}

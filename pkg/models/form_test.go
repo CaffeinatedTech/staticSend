@@ -35,7 +35,7 @@ func TestCreateForm(t *testing.T) {
 	}
 
 	// Test duplicate form name for same user
-	_, err = CreateForm(db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com", "manual_form_key_123")
+	_, err = CreateForm(db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com", "", "manual_form_key_123")
 	if err == nil {
 		t.Error("Expected error when creating form with duplicate name for same user")
 	}
@@ -66,7 +66,7 @@ func TestGetFormByID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	createdForm, err := CreateForm(db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com", "form_key_789")
+	createdForm, err := CreateForm(db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com", "", "form_key_789")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestFormExists(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	_, err = CreateForm(db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com", "form_key_789")
+	_, err = CreateForm(db, user.ID, "contact", "example.com", "turnstile_secret_456", "admin@example.com", "", "form_key_789")
 	if err != nil {
 		t.Fatalf("Failed to create form: %v", err)
 	}

@@ -53,6 +53,26 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("Failed to execute migration: %v", err)
 	}
 
+	// Run turnstile key fix migration
+	migrationSQL, err = os.ReadFile("../../migrations/004_fix_turnstile_key.up.sql")
+	if err != nil {
+		t.Fatalf("Failed to read migration file: %v", err)
+	}
+
+	if _, err := db.Exec(string(migrationSQL)); err != nil {
+		t.Fatalf("Failed to execute migration: %v", err)
+	}
+
+	// Run callback_url migration
+	migrationSQL, err = os.ReadFile("../../migrations/005_add_callback_url.up.sql")
+	if err != nil {
+		t.Fatalf("Failed to read migration file: %v", err)
+	}
+
+	if _, err := db.Exec(string(migrationSQL)); err != nil {
+		t.Fatalf("Failed to execute migration: %v", err)
+	}
+
 	return db
 }
 

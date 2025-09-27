@@ -29,6 +29,14 @@
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                        placeholder="your-email@example.com">
             </div>
+
+            <div>
+                <label for="callback_url" class="block text-sm font-medium text-gray-700">Callback URL (optional)</label>
+                <input type="url" id="callback_url" name="callback_url" value="{{$form.CallbackURL}}"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                       placeholder="https://example.com/thank-you">
+                <p class="text-xs text-gray-500">If provided, users will be redirected here after a successful submission.</p>
+            </div>
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Form Key</label>

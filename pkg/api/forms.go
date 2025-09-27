@@ -41,10 +41,19 @@ func (h *FormHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
 	domain := r.FormValue("domain")
 	turnstileSecret := r.FormValue("turnstile_secret")
 	forwardEmail := r.FormValue("forward_email")
+	callbackURL := r.FormValue("callback_url")
 
 	if name == "" || domain == "" || turnstileSecret == "" || forwardEmail == "" {
 		http.Error(w, "Name, domain, secret key, and forward email are required", http.StatusBadRequest)
 		return
+	}
+
+	// Validate callback URL if provided
+	if callbackURL != "" {
+		if !utils.IsValidCallbackURL(callbackURL) {
+			http.Error(w, "Invalid callback URL. Must be http(s)://...", http.StatusBadRequest)
+			return
+		}
 	}
 
 	// Auto-generate unique form key
@@ -65,7 +74,7 @@ func (h *FormHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = models.CreateForm(h.DB, user.ID, name, domain, turnstileSecret, forwardEmail, formKey)
+	_, err = models.CreateForm(h.DB, user.ID, name, domain, turnstileSecret, forwardEmail, callbackURL, formKey)
 	if err != nil {
 		http.Error(w, "Failed to create form", http.StatusInternalServerError)
 		return
@@ -202,14 +211,23 @@ func (h *FormHandler) UpdateForm(w http.ResponseWriter, r *http.Request) {
 	domain := r.FormValue("domain")
 	turnstileSecret := r.FormValue("turnstile_secret")
 	forwardEmail := r.FormValue("forward_email")
+	callbackURL := r.FormValue("callback_url")
 
 	if name == "" || domain == "" || turnstileSecret == "" || forwardEmail == "" {
 		http.Error(w, "Name, domain, secret key, and forward email are required", http.StatusBadRequest)
 		return
 	}
 
+	// Validate callback URL if provided
+	if callbackURL != "" {
+		if !utils.IsValidCallbackURL(callbackURL) {
+			http.Error(w, "Invalid callback URL. Must be http(s)://...", http.StatusBadRequest)
+			return
+		}
+	}
+
 	// Update form
-	err = models.UpdateForm(h.DB, formID, name, domain, turnstileSecret, forwardEmail)
+	err = models.UpdateForm(h.DB, formID, name, domain, turnstileSecret, forwardEmail, callbackURL)
 	if err != nil {
 		http.Error(w, "Failed to update form", http.StatusInternalServerError)
 		return

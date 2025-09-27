@@ -121,12 +121,12 @@ func TestGetSubmissionsByFormID(t *testing.T) {
 		t.Fatalf("Failed to create user: %v", err)
 	}
 
-	form1, err := CreateForm(db, user.ID, "contact", "example1.com", "turnstile_secret_456", "admin@example.com", "form_key_001")
+	form1, err := CreateForm(db, user.ID, "contact", "example1.com", "turnstile_secret_456", "admin@example.com", "", "form_key_001")
 	if err != nil {
 		t.Fatalf("Failed to create form1: %v", err)
 	}
 
-	form2, err := CreateForm(db, user.ID, "feedback", "example1.com", "turnstile_secret_abc", "admin@example.com", "form_key_002")
+	form2, err := CreateForm(db, user.ID, "feedback", "example1.com", "turnstile_secret_abc", "admin@example.com", "", "form_key_002")
 	if err != nil {
 		t.Fatalf("Failed to create form2: %v", err)
 	}

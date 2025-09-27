@@ -43,6 +43,26 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("Failed to execute app settings migration: %v", err)
 	}
 
+	// Run form schema update migration (adds columns like domain, forward_email, etc.)
+	migrationSQL, err = os.ReadFile("../../migrations/003_update_form_schema.up.sql")
+	if err != nil {
+		t.Fatalf("Failed to read form schema update migration file: %v", err)
+	}
+
+	if _, err := db.Exec(string(migrationSQL)); err != nil {
+		t.Fatalf("Failed to execute form schema update migration: %v", err)
+	}
+
+	// Run turnstile key fix migration if applicable
+	migrationSQL, err = os.ReadFile("../../migrations/004_fix_turnstile_key.up.sql")
+	if err != nil {
+		t.Fatalf("Failed to read turnstile key fix migration file: %v", err)
+	}
+
+	if _, err := db.Exec(string(migrationSQL)); err != nil {
+		t.Fatalf("Failed to execute turnstile key fix migration: %v", err)
+	}
+
 	return db
 }
 

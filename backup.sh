@@ -149,7 +149,10 @@ echo "Backup upload complete: ${ARCHIVE_NAME} (${ARCHIVE_SIZE})"
 # Optional: Clean up old backups (keep last 30 days)
 if [[ "${CLEANUP_OLD_BACKUPS:-true}" == "true" ]]; then
   echo "Cleaning up old backups (keeping last 30 days)..."
-  CUTOFF_DATE=$(date -d "30 days ago" +%Y-%m-%d)
+  # Calculate cutoff date (30 days ago) using Unix timestamp arithmetic
+  CURRENT_TIMESTAMP=$(date +%s)
+  CUTOFF_TIMESTAMP=$((CURRENT_TIMESTAMP - 30 * 24 * 60 * 60))
+  CUTOFF_DATE=$(date -r "$CUTOFF_TIMESTAMP" +%Y-%m-%d 2>/dev/null || date -d "@$CUTOFF_TIMESTAMP" +%Y-%m-%d)
   echo "Deleting backups older than: $CUTOFF_DATE"
   
   aws s3 ls "s3://${S3_BUCKET}/" --endpoint-url "${S3_ENDPOINT}" | \

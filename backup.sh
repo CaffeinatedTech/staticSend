@@ -149,29 +149,7 @@ echo "Backup upload complete: ${ARCHIVE_NAME} (${ARCHIVE_SIZE})"
 # Optional: Clean up old backups (keep last 30 days)
 if [[ "${CLEANUP_OLD_BACKUPS:-true}" == "true" ]]; then
   echo "Cleaning up old backups (keeping last 30 days)..."
-  # Alpine Linux uses busybox date - use a simpler approach
-  # Get current date components and calculate 30 days ago manually
-  CURRENT_YEAR=$(date +%Y)
-  CURRENT_MONTH=$(date +%m)
-  CURRENT_DAY=$(date +%d)
-  
-  # Simple approach: subtract 30 from day, adjust month/year if needed
-  # This is approximate but safe for cleanup purposes
-  CUTOFF_DAY=$((CURRENT_DAY - 30))
-  CUTOFF_MONTH=$CURRENT_MONTH
-  CUTOFF_YEAR=$CURRENT_YEAR
-  
-  if [ $CUTOFF_DAY -le 0 ]; then
-    CUTOFF_MONTH=$((CURRENT_MONTH - 1))
-    CUTOFF_DAY=$((CUTOFF_DAY + 30))
-    if [ $CUTOFF_MONTH -le 0 ]; then
-      CUTOFF_MONTH=12
-      CUTOFF_YEAR=$((CURRENT_YEAR - 1))
-    fi
-  fi
-  
-  # Format with leading zeros
-  CUTOFF_DATE=$(printf "%04d-%02d-%02d" $CUTOFF_YEAR $CUTOFF_MONTH $CUTOFF_DAY)
+  CUTOFF_DATE=$(date -d "30 days ago" +%Y-%m-%d)
   echo "Deleting backups older than: $CUTOFF_DATE"
   
   aws s3 ls "s3://${S3_BUCKET}/" --endpoint-url "${S3_ENDPOINT}" | \

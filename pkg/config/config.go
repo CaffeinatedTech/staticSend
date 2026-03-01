@@ -10,16 +10,17 @@ import (
 type Config struct {
 	Port                string
 	DatabasePath        string
-	EmailHost          string
-	EmailPort          int
-	EmailUsername      string
-	EmailPassword      string
-	EmailFrom          string
-	EmailUseTLS        bool
-	TurnstilePublicKey string
-	TurnstileSecretKey string
-	JWTSecretKey       string
+	EmailHost           string
+	EmailPort           int
+	EmailUsername       string
+	EmailPassword       string
+	EmailFrom           string
+	EmailUseTLS         bool
+	TurnstilePublicKey  string
+	TurnstileSecretKey  string
+	JWTSecretKey        string
 	RegistrationEnabled bool
+	BaseURL             string
 }
 
 // LoadConfig loads configuration from environment variables with defaults
@@ -27,16 +28,17 @@ func LoadConfig() *Config {
 	return &Config{
 		Port:                getEnv("PORT", "8080"),
 		DatabasePath:        getEnv("DATABASE_PATH", "./data/staticsend.db"),
-		EmailHost:          getEnv("EMAIL_HOST", "localhost"),
-		EmailPort:          getEnvAsInt("EMAIL_PORT", 587),
-		EmailUsername:      getEnv("EMAIL_USERNAME", ""),
-		EmailPassword:      getEnv("EMAIL_PASSWORD", ""),
-		EmailFrom:          getEnv("EMAIL_FROM", "noreply@example.com"),
-		EmailUseTLS:        getEnvAsBool("EMAIL_USE_TLS", true),
-		TurnstilePublicKey: getEnv("TURNSTILE_PUBLIC_KEY", ""),
-		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", ""),
-		JWTSecretKey:       getEnv("JWT_SECRET_KEY", "change-this-secret-key"),
+		EmailHost:           getEnv("EMAIL_HOST", "localhost"),
+		EmailPort:           getEnvAsInt("EMAIL_PORT", 587),
+		EmailUsername:       getEnv("EMAIL_USERNAME", ""),
+		EmailPassword:       getEnv("EMAIL_PASSWORD", ""),
+		EmailFrom:           getEnv("EMAIL_FROM", "noreply@example.com"),
+		EmailUseTLS:         getEnvAsBool("EMAIL_USE_TLS", true),
+		TurnstilePublicKey:  getEnv("TURNSTILE_PUBLIC_KEY", ""),
+		TurnstileSecretKey:  getEnv("TURNSTILE_SECRET_KEY", ""),
+		JWTSecretKey:        getEnv("JWT_SECRET_KEY", "change-this-secret-key"),
 		RegistrationEnabled: getEnvAsBool("REGISTRATION_ENABLED", true),
+		BaseURL:             getEnv("STATICSEND_BASE_URL", ""),
 	}
 }
 

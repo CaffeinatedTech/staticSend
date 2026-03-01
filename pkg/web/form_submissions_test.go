@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"staticsend/pkg/config"
 	"staticsend/pkg/middleware"
 	"staticsend/pkg/models"
 	"staticsend/pkg/templates"
@@ -69,7 +70,7 @@ func TestFormSubmissions_RendersSubmittedData(t *testing.T) {
 	}
 
 	// 3) Build TemplateManager and WebHandler
-	tm := templates.NewTemplateManager()
+	tm := templates.NewTemplateManager(&config.Config{})
 	h := NewWebHandler(db, tm, "")
 
 	// 4) Build a request with chi route params and user in context

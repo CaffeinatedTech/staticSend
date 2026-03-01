@@ -43,7 +43,7 @@
         <div>
             <label class="block text-sm font-medium text-gray-700">Submission Endpoint</label>
             <p class="mt-1 text-sm text-gray-900 break-all">
-                /api/v1/submit/{{$form.FormKey}}
+                {{baseURL}}/api/v1/submit/{{$form.FormKey}}
             </p>
         </div>
         
@@ -51,7 +51,7 @@
             <label class="block text-sm font-medium text-gray-700">Integration Code</label>
             <div class="mt-1">
                 <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
-&lt;form action="/api/v1/submit/{{$form.FormKey}}" method="POST"&gt;
+&lt;form action="{{baseURL}}/api/v1/submit/{{$form.FormKey}}" method="POST"&gt;
     &lt;input type="text" name="name" placeholder="Your Name" required&gt;
     &lt;input type="email" name="email" placeholder="Your Email" required&gt;
     &lt;textarea name="message" placeholder="Your Message" required&gt;&lt;/textarea&gt;

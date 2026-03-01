@@ -1,8 +1,8 @@
 package templates
 
 import (
- 	"fmt"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"staticsend/pkg/config"
 	"staticsend/pkg/models"
 )
 
@@ -41,10 +42,10 @@ type TemplateManager struct {
 }
 
 // NewTemplateManager creates a new template manager
-func NewTemplateManager() *TemplateManager {
+func NewTemplateManager(cfg *config.Config) *TemplateManager {
 	tm := &TemplateManager{
 		templates: make(map[string]*template.Template),
-		baseURL:   getBaseURL(),
+		baseURL:   getBaseURL(cfg),
 	}
 	tm.loadTemplates()
 	return tm
@@ -96,7 +97,7 @@ func (tm *TemplateManager) loadTemplates() {
 
 	// Walk through all template files
 	templatesDir := filepath.Join(cwd, "templates")
-	
+
 	err = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -105,7 +106,7 @@ func (tm *TemplateManager) loadTemplates() {
 		if !info.IsDir() && filepath.Ext(path) == ".html" && path != basePath {
 			// Use relative path from templates directory as key
 			relPath, _ := filepath.Rel(templatesDir, path)
-			
+
 			// Check if this is a partial (in partials directory)
 			if filepath.Dir(relPath) == "partials" {
 				// For partials, parse without base template but with functions
@@ -160,12 +161,12 @@ func DefaultTemplateData() TemplateData {
 }
 
 // getBaseURL determines the base URL for the application
-func getBaseURL() string {
-	// Try to get from environment variable
-	if envURL := os.Getenv("STATICSEND_BASE_URL"); envURL != "" {
-		return strings.TrimSuffix(envURL, "/")
+func getBaseURL(cfg *config.Config) string {
+	// Use config value if set
+	if cfg.BaseURL != "" {
+		return strings.TrimSuffix(cfg.BaseURL, "/")
 	}
-	
+
 	// For development, use localhost with default port
 	return "http://localhost:8080"
 }

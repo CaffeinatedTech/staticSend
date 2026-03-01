@@ -95,6 +95,7 @@ export TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 | `DATABASE_PATH` | SQLite database path | `./data/staticsend.db` | No |
 | `JWT_SECRET_KEY` | JWT signing secret | - | Yes |
 | `REGISTRATION_ENABLED` | Enable user registration | `true` | No |
+| `STATICSEND_BASE_URL` | Base URL for generating full submission URLs (e.g., `https://staticsend.example.com`) | `http://localhost:8080` | No |
 
 #### Email Configuration
 | Variable | Description | Default | Required |

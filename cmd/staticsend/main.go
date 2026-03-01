@@ -13,15 +13,15 @@ import (
 	"staticsend/pkg/config"
 	"staticsend/pkg/database"
 	"staticsend/pkg/email"
+	customMiddleware "staticsend/pkg/middleware"
 	"staticsend/pkg/templates"
 	"staticsend/pkg/web"
-	customMiddleware "staticsend/pkg/middleware"
 )
 
 func main() {
 	// Load configuration from environment variables
 	cfg := config.LoadConfig()
-	
+
 	// Allow command line overrides
 	port := flag.String("port", cfg.Port, "Port to listen on")
 	dbPath := flag.String("db", cfg.DatabasePath, "Database file path")
@@ -32,7 +32,7 @@ func main() {
 		flag.Usage()
 		return
 	}
-	
+
 	// Update config with command line values
 	cfg.Port = *port
 	cfg.DatabasePath = *dbPath
@@ -49,13 +49,13 @@ func main() {
 	// Use Turnstile configuration from config
 	authTurnstilePublicKey := cfg.TurnstilePublicKey
 	authTurnstileSecretKey := cfg.TurnstileSecretKey
-	
+
 	// Create template manager and web handlers
-	tm := templates.NewTemplateManager()
+	tm := templates.NewTemplateManager(cfg)
 	webHandler := web.NewWebHandler(database.DB, tm, authTurnstilePublicKey)
 	webAuthHandler := web.NewWebAuthHandler(&database.Database{Connection: database.DB}, secretKey, tm, authTurnstilePublicKey, authTurnstileSecretKey)
 	settingsHandler := web.NewSettingsHandler(&database.Database{Connection: database.DB}, tm)
-	
+
 	// Create email service from config
 	emailConfig := email.EmailConfig{
 		Host:     cfg.EmailHost,
@@ -66,7 +66,7 @@ func main() {
 		UseTLS:   cfg.EmailUseTLS,
 	}
 	emailService := email.NewEmailService(emailConfig, 100, 10, 5)
-	
+
 	// Create API handlers
 	formHandler := api.NewFormHandler(database.DB)
 	submissionHandler := api.NewSubmissionHandler(database.DB, emailService)
@@ -74,13 +74,13 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	
+
 	// Serve static files
 	staticDir := "./static"
 	if _, err := os.Stat(staticDir); err == nil {
 		r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 	}
-	
+
 	// Serve favicon
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./static/favicon.svg")
@@ -90,7 +90,7 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
-	
+
 	// Form submission endpoint (public) with rate limiting
 	r.With(customMiddleware.IPRateLimit(time.Minute, 10)).Post("/api/v1/submit/{formKey}", submissionHandler.SubmitForm)
 
@@ -106,8 +106,8 @@ func main() {
 	// Protected routes (require authentication)
 	r.Group(func(r chi.Router) {
 		r.Use(customMiddleware.AuthMiddleware(customMiddleware.AuthConfig{
-			SecretKey: secretKey,
-			DB:        &database.Database{Connection: database.DB},
+			SecretKey:   secretKey,
+			DB:          &database.Database{Connection: database.DB},
 			PublicPaths: []string{"/login", "/register", "/health"},
 		}))
 
@@ -119,7 +119,7 @@ func main() {
 		r.Get("/forms/{id}/view", webHandler.ViewFormModal)
 		r.Get("/forms/{id}/edit", webHandler.EditFormModal)
 		r.Get("/forms/{id}/submissions", webHandler.FormSubmissions)
-		
+
 		// Form API routes
 		r.Post("/forms", formHandler.CreateForm)
 		r.Get("/forms/{id}", formHandler.GetForm)
